@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block main %}
+<table border="1" width=650px>
+  <tr>
+    <td width=150px>Company Name</td>
+    <td width=500px>{{ job.company_name }}</td>
+  </tr>
+  <tr>
+    <td>Company Location</td>
+    <td>{{ job.company_location }}</td>
+  </tr>
+  <tr>
+    <td>Company URL</td>
+    <td><a href='{{ job.company_url }}' rel="external">{{ job.company_url }}</a></td>
+  </tr>
+  <tr>
+    <td>Job Posting</td>
+    <td><pre>{{ job.job_posting }}</pre></td>
+  </tr>
+  <tr>
+    <td>Application Instructions</td>
+    <td>{{ job.application_instructions }}</td>
+  </tr>
+</table>
+{% endblock %}

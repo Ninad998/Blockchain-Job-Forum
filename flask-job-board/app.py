@@ -4,17 +4,15 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from passlib.hash import pbkdf2_sha256
 from functools import wraps
-from flask_seasurf import SeaSurf
-from flask_bcrypt import Bcrypt
-from flask_gravatar import Gravatar
+# from flask_seasurf import SeaSurf
+# from flask_gravatar import Gravatar
 
 import settings
 
 app = Flask(__name__)
 app.config.from_object(settings)
-csrf = SeaSurf(app)
-bcrypt = Bcrypt(app)
-gravatar = Gravatar(app, size=160, default='mm')
+# csrf = SeaSurf(app)
+# gravatar = Gravatar(app, size=160, default='mm')
 
 db = pymysql.connect(db="job_board", host="localhost", user="root", passwd="root", port=3306)
 
@@ -58,12 +56,12 @@ def home():
     jobs = {}
     try:
         cur = db.cursor()
-        query = 'SELECT * FROM jobs;'
+        query = "SELECT * FROM jobs;"
         cur.execute(query)
         response = cur.fetchall()
         jobs = []
         for item in response:
-            job = {}
+            job = dict()
             job['company_name'] = item[1]
             job['company_location'] = item[2]
             job['company_url'] = item[3]
@@ -106,22 +104,32 @@ def create_job():
         joblist.append(datetime.utcnow().date().strftime('%m-%d-%y'))
         cur = db.cursor()
         try:
-            query = 'INSERT INTO jobs(company_name,company_location,company_url,job_title,job_posting,application_instructions, created) VALUES %r;' % (
-                tuple(joblist),)
+            query = "INSERT INTO jobs(company_name, company_location, company_url, job_title, job_posting, " \
+                    "application_instructions, created) VALUES %r;" % (tuple(joblist))
             result = cur.execute(query)
             db.commit()
         except:
-            query = 'CREATE TABLE jobs(id int NOT NULL AUTO_INCREMENT,company_name varchar(255),company_location varchar(255),company_url varchar(255),job_title varchar(255),job_posting varchar(255),application_instructions varchar(1000), created date, KEY(id),PRIMARY KEY(company_name));'
+            query = "CREATE TABLE jobs(" \
+                    "id int NOT NULL AUTO_INCREMENT," \
+                    "company_name varchar(255)," \
+                    "company_location varchar(255)," \
+                    "company_url varchar(255)," \
+                    "job_title varchar(255)," \
+                    "job_posting varchar(255)," \
+                    "application_instructions varchar(1000)," \
+                    "created date, " \
+                    "KEY(id), PRIMARY KEY(company_name));"
             cur.execute(query)
-            query = 'INSERT INTO jobs(company_name,company_location,company_url,job_title,job_posting,application_instructions, created) VALUES %r;' % (
-                tuple(joblist),)
+            query = "INSERT INTO jobs(company_name, company_location, company_url, job_title, job_posting, " \
+                    "application_instructions, created) VALUES %r;" % (tuple(joblist))
             cur.execute(query)
             db.commit()
 
         cur = db.cursor()
-        sql = "SELECT id FROM jobs ORDER BY id DESC LIMIT 1"
+        sql = "SELECT id FROM jobs ORDER BY id DESC LIMIT 1;"
         cur.execute(sql)
         response = cur.fetchone()
+        job_id = 0
         for lastID in response:
             job_id = lastID
         next_url = job_id
@@ -135,7 +143,7 @@ def create_job():
 def signin():
     if request.method == 'POST':
         if request.form['password'] == request.form['password2']:
-            userlist = []
+            userlist = list()
             userlist.append(str(request.form['username']))
             userlist.append(str(request.form['email']))
             userlist.append(str(request.form['first_name']))
@@ -150,22 +158,32 @@ def signin():
 
             try:
                 cur = db.cursor()
-                query = 'INSERT INTO users(username,email,first_name,last_name,location,homepage,passhash,created) VALUES %r;' % (
-                    tuple(userlist),)
+                query = "INSERT INTO users(username, email, first_name, last_name, location, homepage, " \
+                        "passhash, created) VALUES %r;" % (tuple(userlist))
                 result = cur.execute(query)
                 db.commit()
 
             except:
                 cur = db.cursor()
-                query = 'CREATE TABLE users(id int NOT NULL AUTO_INCREMENT,username varchar(50), email varchar(200), first_name varchar(50), last_name varchar(50), location varchar(200), homepage varchar(200), passhash varchar(500), created date, KEY(id),PRIMARY KEY(username));'
+                query = "CREATE TABLE users(" \
+                        "id int NOT NULL AUTO_INCREMENT, " \
+                        "username varchar(50), " \
+                        "email varchar(200), " \
+                        "first_name varchar(50), " \
+                        "last_name varchar(50), " \
+                        "location varchar(200), " \
+                        " homepage varchar(200), " \
+                        "passhash varchar(500), " \
+                        "created date, " \
+                        "KEY(id),PRIMARY KEY(username));"
                 cur.execute(query)
-                query = 'INSERT INTO users(username,email,first_name,last_name,location,homepage,passhash,created) VALUES %r;' % (
-                    tuple(userlist),)
+                uery = "INSERT INTO users(username, email, first_name, last_name, location, homepage, " \
+                       "passhash, created) VALUES %r;" % (tuple(userlist))
                 cur.execute(query)
                 db.commit()
 
             cur = db.cursor()
-            sql = "SELECT id FROM users ORDER BY id DESC LIMIT 1"
+            sql = "SELECT id FROM users ORDER BY id DESC LIMIT 1;"
             cur.execute(sql)
             response = cur.fetchone()
             for lastID in response:
@@ -186,7 +204,7 @@ def login():
     if request.method == 'POST':
         try:
             cur = db.cursor()
-            query = "SELECT * FROM users WHERE username='%s'" % str(request.form['username'])
+            query = "SELECT * FROM users WHERE username='%s';" % str(request.form['username'])
             result = cur.execute(query)
             response = cur.fetchone()
             username = response[1]
@@ -219,7 +237,7 @@ def logout():
 def settings():
     if request.method == 'POST':
         cur = db.cursor()
-        query = "SELECT id FROM users where username='%s'" % str(session.get('username'))
+        query = "SELECT id FROM users where username='%s';" % str(session.get('username'))
         cur.execute(query)
         response = cur.fetchone()
         user_id = 0
@@ -227,18 +245,18 @@ def settings():
             user_id = lastID
 
         cur = db.cursor()
-        query = 'UPDATE users SET email="%s",first_name="%s",last_name="%s",location="%s",' \
-                'homepage="%s" WHERE  id=%s;' % (
+        query = "UPDATE users SET email='%s', first_name='%s', last_name='%s', location='%s', " \
+                "homepage='%s' WHERE id=%s;" % (
                     str(request.form['email']), str(request.form['first_name']),
-                    str(request.form['last_name']), str(request.form['location']), str(request.form['homepage']),
-                    user_id)
+                    str(request.form['last_name']), str(request.form['location']),
+                    str(request.form['homepage']), user_id)
         result = cur.execute(query)
         db.commit()
         flash(u'Profile was successfully updated.', 'success')
         return redirect(url_for('show_user', user_id=user_id))
     else:
         cur = db.cursor()
-        query = 'SELECT * FROM users WHERE username="%s";' % str(session.get('username'))
+        query = "SELECT * FROM users WHERE username='%s';" % str(session.get('username'))
         result = cur.execute(query)
         response = cur.fetchone()
         user = {'id': response[0], 'username': response[1], 'email': response[2], 'first_name': response[3],
@@ -249,7 +267,7 @@ def settings():
 @app.route('/user/<user_id>')
 def show_user(user_id):
     cur = db.cursor()
-    query = 'SELECT * FROM users WHERE id=' + str(user_id) + ';'
+    query = "SELECT * FROM users WHERE id=%s;" % str(user_id)
     result = cur.execute(query)
     response = cur.fetchone()
     user = {'id': response[0], 'username': response[1], 'email': response[2], 'first_name': response[3],
@@ -260,7 +278,7 @@ def show_user(user_id):
 @app.route('/job/<job_id>')
 def show_job(job_id):
     cur = db.cursor()
-    query = 'SELECT * FROM jobs WHERE id=' + str(job_id) + ';'
+    query = "SELECT * FROM jobs WHERE id=%s;" % str(job_id)
     result = cur.execute(query)
     response = cur.fetchone()
     job = {'id': response[0], 'company_name': response[1], 'company_location': response[2], 'company_url': response[3],
@@ -272,7 +290,7 @@ def show_job(job_id):
 @app.route('/users')
 def show_all_users():
     cur = db.cursor()
-    query = 'SELECT * FROM users;'
+    query = "SELECT * FROM users;"
     result = cur.execute(query)
     response = cur.fetchall()
     users = []

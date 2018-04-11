@@ -1,119 +1,77 @@
 <!doctype html>
-<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
-<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
-<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
-<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
 <head>
-  <meta charset="utf-8">
+    <meta charset="utf-8">
 
-  <title>{% block title %}Flask Job Board Example{% endblock %}</title>
-
-  <meta name="description" content="Example of a job board run off of flask using Mongodb.">
-  <meta name="author" content="Josh Finnie">
-  <meta name="viewport" content="width=980">
-
-  <!-- HTML5 shim, for IE 6-8 support of HTML elements -->
-  <!--[if lt IE 9]>
-    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-  <![endif]-->
-
-  <link rel="shortcut icon" href="/static/favicon.ico">
-  <link rel="stylesheet" href="/static/css/bootstrap.css">
-  <link rel="stylesheet/less" href="/static/css/main.less">
-  {% block css %}{% endblock %}
-
-  <!-- Rather use `less.js` to dynamically compile your `stylesheet/less` files? -->
-  <script src="//cdnjs.cloudflare.com/ajax/libs/less.js/1.1.3/less-1.1.3.min.js"></script>
-  <script>window.less || document.write('<script src="/static/js/libs/less-1.1.3.min.js">\x3C/script>')</script>
-
-  <!-- Need Modernizr? Uncomment the following script. -->
-  <!-- <script src="/static/js/libs/modernizr-2.0.6.js"></script> -->
+    <title>
+        {% block title %}
+        Flask Job Board Example
+        {% endblock %}
+    </title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css"
+          integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous"/>
+    {% block css %}
+    {% endblock %}
 
 </head>
 
 <body>
-    <div class="topbar">
-      <div class="fill">
+<div class="topbar">
+    <div class="fill">
         <div class="container">
-          <a class="brand" href="/">Flask Job Board</a>
-          <ul class="nav">
-            <li><a href="/about">About</a></li>
-            <li><a href="/contact">Contact</a></li>
-          </ul>
-          {% if session.logged_in %}
+            <a class="brand" href="/">Flask Job Board</a>
+            <ul class="nav">
+                <li><a href="/about">About</a></li>
+                <li><a href="/contact">Contact</a></li>
+            </ul>
+            {% if session.logged_in %}
             <p class='pull-right'>
-              Welcome {{ session['username'] }}! | 
-              <a href='/logout'>Log out</a> | 
-              <a href='/settings'>Settings</a>
+                Welcome {{ session['username'] }}! |
+                <a href='/logout'>Log out</a> |
+                <a href='/settings'>Settings</a>
             </p>
-          {% else %}
+            {% else %}
             <p class='pull-right'><a href='/login'>Log in</a> | <a href='/signup'>sign up</a>.</p>
-          {% endif %}
+            {% endif %}
         </div>
-      </div>
     </div>
+</div>
 
 <div class="container">
 
-      <div class="content">
+    <div class="content">
         <div class="row">
-          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-              {% for category, message in messages %}
-                <div class="alert-message {{ category }} fade in" data-alert='alert'>
+            {% for category, message in messages %}
+            <div class="alert-message {{ category }} fade in" data-alert='alert'>
                 <!-- Categories are: warning, error, success, info -->
-                  <a class="close" href="#">×</a>
-                  <p>{{ message }}</p>
-                </div>
-              {% endfor %}
+                <a class="close" href="#">×</a>
+                <p>{{ message }}</p>
+            </div>
+            {% endfor %}
             {% endif %}
-          {% endwith %}
-          {% block main %}
-          {% endblock %}
+            {% endwith %}
+            {% block main %}
+            {% endblock %}
         </div>
-      </div>
+    </div>
 
-      <footer>
-        <p>&copy; Josh Finnie - 2012</p>
-        <p><a href="http://flask.pocoo.org/"><img
-   src="http://flask.pocoo.org/static/badges/made-with-flask-s.png"
-   border="0"
-   alt="made with Flask"
-   title="made with Flask"></a> &amp; <a href='http://mongoengine.org/'>mongoengine</a>.
-      </footer>
+</div> <!-- /container -->
 
-    </div> <!-- /container -->
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"
+        integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"
+        integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm"
+        crossorigin="anonymous"></script>
 
-  <!-- JavaScript at the bottom for fast page loading -->
-
-  <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if necessary -->
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-  <script>window.jQuery || document.write('<script src="/static/js/libs/jquery-1.7.1.min.js">\x3C/script>')</script>
-
-
-  <!-- Additional JavaScript libraries and plugins... -->
-  <script src="/static/js/libs/bootstrap-dropdown.js"></script>
-  <script src="/static/js/libs/bootstrap-alerts.js"></script>
-  <script>window.setTimeout(function() { $(".alert-message").alert('close'); }, 2000);</script>
-  {% block js %}{% endblock %}
-
-
-  <!-- mathiasbynens.be/notes/async-analytics-snippet Change UA-XXXXX-X to be your site's ID -->
-  <script>
-    var _gaq=[['_setAccount','UA-250621-24'],['_trackPageview']];
-    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];g.async=1;
-    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-    s.parentNode.insertBefore(g,s)}(document,'script'));
-  </script>
-
-
-  <!-- Prompt IE 6-7 users to install Chrome Frame.
-       chromium.org/developers/how-tos/chrome-frame-getting-started -->
-  <!--[if lte IE 7 ]>
-    <script src="//ajax.googleapis.com/ajax/libs/chrome-frame/1.0.3/CFInstall.min.js"></script>
-    <script>window.attachEvent('onload',function(){CFInstall.check({mode:'overlay'})})</script>
-  <![endif]-->
+{% block js %}
+{% endblock %}
 
 </body>
 </html>

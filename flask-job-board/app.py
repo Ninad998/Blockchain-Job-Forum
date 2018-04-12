@@ -4,15 +4,12 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from passlib.hash import pbkdf2_sha256
 from functools import wraps
-# from flask_seasurf import SeaSurf
-# from flask_gravatar import Gravatar
+
 
 import settings
 
 app = Flask(__name__)
 app.config.from_object(settings)
-# csrf = SeaSurf(app)
-# gravatar = Gravatar(app, size=160, default='mm')
 
 db = pymysql.connect(db="job_board", host="localhost", user="root", passwd="root", port=3306)
 
@@ -105,7 +102,7 @@ def create_job():
         cur = db.cursor()
         try:
             query = "INSERT INTO jobs(company_name, company_location, company_url, job_title, job_posting, " \
-                    "application_instructions, created) VALUES %r;" % (tuple(joblist))
+                    "application_instructions, created) VALUES %r;" % (tuple(joblist),)
             result = cur.execute(query)
             db.commit()
         except:
@@ -121,7 +118,7 @@ def create_job():
                     "KEY(id), PRIMARY KEY(company_name));"
             cur.execute(query)
             query = "INSERT INTO jobs(company_name, company_location, company_url, job_title, job_posting, " \
-                    "application_instructions, created) VALUES %r;" % (tuple(joblist))
+                    "application_instructions, created) VALUES %r;" % (tuple(joblist),)
             cur.execute(query)
             db.commit()
 
@@ -159,11 +156,12 @@ def signin():
             try:
                 cur = db.cursor()
                 query = "INSERT INTO users(username, email, first_name, last_name, location, homepage, " \
-                        "passhash, created) VALUES %r;" % (tuple(userlist))
+                        "passhash, created) VALUES %r;" % (tuple(userlist),)
                 result = cur.execute(query)
                 db.commit()
 
-            except:
+            except Exception as e:
+                print e
                 cur = db.cursor()
                 query = "CREATE TABLE users(" \
                         "id int NOT NULL AUTO_INCREMENT, " \
@@ -177,8 +175,8 @@ def signin():
                         "created date, " \
                         "KEY(id),PRIMARY KEY(username));"
                 cur.execute(query)
-                uery = "INSERT INTO users(username, email, first_name, last_name, location, homepage, " \
-                       "passhash, created) VALUES %r;" % (tuple(userlist))
+                query = "INSERT INTO users(username, email, first_name, last_name, location, homepage, " \
+                       "passhash, created) VALUES %r;" % (tuple(userlist),)
                 cur.execute(query)
                 db.commit()
 

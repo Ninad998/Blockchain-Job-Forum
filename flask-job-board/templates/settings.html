@@ -4,7 +4,7 @@
 <h1>Settings</h1>
 <div class='userinfo'>
 <h2>{{ user.username }}</h2>
-<p><img src='{{ user.email | gravatar }}' alt='{{ user.username }} avatar' /></p>
+<p><img src='{{ user.email }}' alt='{{ user.username }} avatar' /></p>
 </div><!-- /userinfo -->
 <form method="post" action="/settings" class="form-stacked">
 	<div class="clearfix">
@@ -41,8 +41,6 @@
 			<input class='span12' id='homepage' name='homepage' type='text' value='{{ user.homepage }}'>
 		</div><!-- /input -->
 	</div><!-- /clearfix -->
-
-	<input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
   	<div class="actions">
     <button type="submit" class="btn primary">Update Profile</button>

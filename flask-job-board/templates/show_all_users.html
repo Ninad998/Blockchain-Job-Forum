@@ -3,6 +3,6 @@
 {% block main %}
 <h1>List of Users</h1>
 {% for user in users %}
-  <a href="/user/{{ user.id }}">{{ user.username }}</a><br />
+<a href="/user/{{ user.id }}">{{ user.username }}</a><br/>
 {% endfor %}
 {% endblock %}

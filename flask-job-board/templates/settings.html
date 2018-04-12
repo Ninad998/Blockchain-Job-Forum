@@ -3,47 +3,48 @@
 {% block main %}
 <h1>Settings</h1>
 <div class='userinfo'>
-<h2>{{ user.username }}</h2>
-<p><img src='{{ user.email }}' alt='{{ user.username }} avatar' /></p>
-</div><!-- /userinfo -->
-<form method="post" action="/settings" class="form-stacked">
-	<div class="clearfix">
-		<label for='first_name'>First Name:</label>
-		<div class="input">
-			<input class='span12' id='first_name' name='first_name' type='text' value='{{ user.first_name }}'>
-		</div><!-- /input -->
-	</div><!-- /clearfix -->
+    <h2>{{ user.username }}</h2>
+    <p><img src='{{ user.email }}' alt='{{ user.username }} avatar'/></p>
+</div>
+<form method="post" action="/settings">
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='first_name'>First Name:</label>
+        <div class="col-md-4">
+            <input class="form-control" id='first_name' name='first_name' type='text' value='{{ user.first_name }}'>
+        </div>
+    </div>
 
-	<div class="clearfix">
-		<label for='last_name'>Last Name:</label>
-		<div class="input">
-			<input class='span12' id='last_name' name='last_name' type='text' value='{{ user.last_name }}'>
-		</div><!-- /input -->
-	</div><!-- /clearfix -->
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='last_name'>Last Name:</label>
+        <div class="col-md-4">
+            <input class="form-control" id='last_name' name='last_name' type='text' value='{{ user.last_name }}'>
+        </div>
+    </div>
 
-	<div class="clearfix">
-		<label for='email'>Email:</label>
-		<div class="input">
-			<input class='span12' id='email' name='email' type='text' value='{{ user.email }}'>
-		</div><!-- /input -->
-	</div><!-- /clearfix -->
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='email'>Email:</label>
+        <div class="col-md-4">
+            <input class="form-control" id='email' name='email' type='text' value='{{ user.email }}'>
+        </div>
+    </div>
 
-	<div class="clearfix">
-		<label for='location'>Location:</label>
-		<div class="input">
-			<input class='span12' id='location' name='location' type='text' value='{{ user.location }}'>
-		</div><!-- /input -->
-	</div><!-- /clearfix -->
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='location'>Location:</label>
+        <div class="col-md-4">
+            <input class="form-control" id='location' name='location' type='text' value='{{ user.location }}'>
+        </div>
+    </div>
 
-	<div class="clearfix">
-		<label for='homepage'>Homepage:</label>
-		<div class="input">
-			<input class='span12' id='homepage' name='homepage' type='text' value='{{ user.homepage }}'>
-		</div><!-- /input -->
-	</div><!-- /clearfix -->
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='homepage'>Homepage:</label>
+        <div class="col-md-4">
+            <input class="form-control" id='homepage' name='homepage' type='text' value='{{ user.homepage }}'>
+        </div>
+    </div>
+    <br/>
 
-  	<div class="actions">
-    <button type="submit" class="btn primary">Update Profile</button>
-   	</div>
+    <div class="form-group row">
+        <button type="submit" class="btn btn-primary" style="margin-left: 2em">Update Profile</button>
+    </div>
 </form>
 {% endblock %}

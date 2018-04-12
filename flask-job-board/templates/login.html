@@ -1,27 +1,33 @@
 {% extends "base.html" %}
 
 {% block main %}
-<form method="post" action="/login" class="form-stacked">
-	<div class="clearfix">
-		<label for='username'>Username:</label>
-		<div class="input">
-			<input class='span12' id='username' name='username' type='text'>
-		</div><!-- /input -->
-	</div><!-- /clearfix -->
+<form method="post" action="/login">
+    <br/>
+    <br/>
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='username'>Username:</label>
+        <div class="col-md-4">
+            <input class="form-control" id='username' name='username' type='text'>
+        </div>
+    </div>
 
-	<div class="clearfix">
-		<label for='password'>Password:</label>
-		<div class="input">
-			<input class='span12' id='password' name='password' type='password'>
-		</div><!-- /input -->
-	</div><!-- /clearfix -->
-	
-  <div class="actions">
-    <button type="submit" class="btn primary">Login</button>
-    &nbsp;
-    <button type="reset" class="btn">Cancel</button>
-   </div>
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='password'>Password:</label>
+        <div class="col-md-4">
+            <input class="form-control" id='password' name='password' type='password'>
+        </div>
+    </div>
+    <br/>
+
+    <div class="form-group row">
+        <button type="submit" class="btn btn-primary" style="margin-left: 2em">Login</button>
+        <button type="reset" class="btn btn-secondary-outline" style="margin-left: 2em">Cancel</button>
+    </div>
+    <br/>
+    <br/>
+
+    <div class="text-muted">
+        If you do not already have a username/password, please <a href='/signup'>sign up</a>.
+    </div>
 </form>
-
-<p>If you do not already have a username/password, please <a href='/signup'>sign up</a>.</p>
 {% endblock %}

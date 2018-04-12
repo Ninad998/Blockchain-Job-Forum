@@ -4,8 +4,6 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from passlib.hash import pbkdf2_sha256
 from functools import wraps
-
-
 import settings
 
 app = Flask(__name__)
@@ -50,13 +48,13 @@ def timesince(dt, default="just now"):
 
 @app.route("/")
 def home():
-    jobs = {}
+    jobs = list()
     try:
         cur = db.cursor()
         query = "SELECT * FROM jobs;"
         cur.execute(query)
         response = cur.fetchall()
-        jobs = []
+        jobs = list()
         for item in response:
             job = dict()
             job['company_name'] = item[1]
@@ -86,7 +84,7 @@ def contact():
 @login_required
 def create_job():
     if request.method == 'POST':
-        joblist = []
+        joblist = list()
         joblist.append(str(request.form['company_name']))
         joblist.append(str(request.form['company_location']))
         company_url = str(request.form['company_url'])
@@ -161,7 +159,7 @@ def signin():
                 db.commit()
 
             except Exception as e:
-                print e
+                print(e)
                 cur = db.cursor()
                 query = "CREATE TABLE users(" \
                         "id int NOT NULL AUTO_INCREMENT, " \

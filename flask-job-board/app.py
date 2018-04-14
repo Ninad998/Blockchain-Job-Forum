@@ -54,6 +54,7 @@ def home():
         query = "SELECT * FROM jobs;"
         cur.execute(query)
         response = cur.fetchall()
+        cur.close()
         jobs = list()
         for item in response:
             job = dict()
@@ -101,29 +102,23 @@ def create_job():
         try:
             query = "INSERT INTO jobs(company_name, company_location, company_url, job_title, job_posting, " \
                     "application_instructions, created) VALUES %r;" % (tuple(joblist),)
-            result = cur.execute(query)
-            db.commit()
-        except:
-            query = "CREATE TABLE jobs(" \
-                    "id int NOT NULL AUTO_INCREMENT," \
-                    "company_name varchar(255)," \
-                    "company_location varchar(255)," \
-                    "company_url varchar(255)," \
-                    "job_title varchar(255)," \
-                    "job_posting varchar(255)," \
-                    "application_instructions varchar(1000)," \
-                    "created date, " \
-                    "KEY(id), PRIMARY KEY(company_name));"
-            cur.execute(query)
-            query = "INSERT INTO jobs(company_name, company_location, company_url, job_title, job_posting, " \
-                    "application_instructions, created) VALUES %r;" % (tuple(joblist),)
             cur.execute(query)
             db.commit()
+        except Exception as e:
+            print(e)
+        finally:
+            cur.close()
 
-        cur = db.cursor()
-        sql = "SELECT id FROM jobs ORDER BY id DESC LIMIT 1;"
-        cur.execute(sql)
-        response = cur.fetchone()
+        try:
+            cur = db.cursor()
+            sql = "SELECT id FROM jobs ORDER BY id DESC LIMIT 1;"
+            cur.execute(sql)
+            response = cur.fetchone()
+        except Exception as e:
+            print(e)
+        finally:
+            cur.close()
+
         job_id = 0
         for lastID in response:
             job_id = lastID
@@ -155,33 +150,23 @@ def signin():
                 cur = db.cursor()
                 query = "INSERT INTO users(username, email, first_name, last_name, location, homepage, " \
                         "passhash, created) VALUES %r;" % (tuple(userlist),)
-                result = cur.execute(query)
+                cur.execute(query)
                 db.commit()
-
             except Exception as e:
                 print(e)
-                cur = db.cursor()
-                query = "CREATE TABLE users(" \
-                        "id int NOT NULL AUTO_INCREMENT, " \
-                        "username varchar(50), " \
-                        "email varchar(200), " \
-                        "first_name varchar(50), " \
-                        "last_name varchar(50), " \
-                        "location varchar(200), " \
-                        " homepage varchar(200), " \
-                        "passhash varchar(500), " \
-                        "created date, " \
-                        "KEY(id),PRIMARY KEY(username));"
-                cur.execute(query)
-                query = "INSERT INTO users(username, email, first_name, last_name, location, homepage, " \
-                       "passhash, created) VALUES %r;" % (tuple(userlist),)
-                cur.execute(query)
-                db.commit()
+            finally:
+                cur.close()
 
-            cur = db.cursor()
-            sql = "SELECT id FROM users ORDER BY id DESC LIMIT 1;"
-            cur.execute(sql)
-            response = cur.fetchone()
+            try:
+                cur = db.cursor()
+                sql = "SELECT id FROM users ORDER BY id DESC LIMIT 1;"
+                cur.execute(sql)
+                response = cur.fetchone()
+            except Exception as e:
+                print(e)
+            finally:
+                cur.close()
+
             for lastID in response:
                 user_id = lastID
 
@@ -200,23 +185,27 @@ def login():
     if request.method == 'POST':
         try:
             cur = db.cursor()
-            query = "SELECT * FROM users WHERE username='%s';" % str(request.form['username'])
+            query = "SELECT username, passhash FROM users WHERE username='%s';" % str(request.form['username'])
             result = cur.execute(query)
             response = cur.fetchone()
-            username = response[1]
-            password = response[7]
-        except:
+            username = response[0]
+            password = response[1]
+        except Exception as e:
+            print(e)
+            flash(u'Password or Username is incorrect.', 'error')
+            return render_template('login.html')
+        finally:
+            cur.close()
+
+        if not pbkdf2_sha256.verify(request.form['password'], password):
             flash(u'Password or Username is incorrect.', 'error')
             return render_template('login.html')
         else:
-            if not pbkdf2_sha256.verify(request.form['password'], password):
-                flash(u'Password or Username is incorrect.', 'error')
-                return render_template('login.html')
-            else:
-                session['username'] = username
-                session['logged_in'] = True
-                flash(u'You have been successfully logged in.', 'success')
-                return redirect(next or url_for('home'))
+            session['username'] = username
+            session['logged_in'] = True
+            flash(u'You have been successfully logged in.', 'success')
+            return redirect(next or url_for('home'))
+
     return render_template('login.html')
 
 
@@ -232,29 +221,47 @@ def logout():
 @login_required
 def settings():
     if request.method == 'POST':
-        cur = db.cursor()
-        query = "SELECT id FROM users where username='%s';" % str(session.get('username'))
-        cur.execute(query)
-        response = cur.fetchone()
+        try:
+            cur = db.cursor()
+            query = "SELECT id FROM users where username='%s';" % str(session.get('username'))
+            cur.execute(query)
+            response = cur.fetchone()
+        except Exception as e:
+            print(e)
+        finally:
+            cur.close()
+
         user_id = 0
         for lastID in response:
             user_id = lastID
 
-        cur = db.cursor()
-        query = "UPDATE users SET email='%s', first_name='%s', last_name='%s', location='%s', " \
-                "homepage='%s' WHERE id=%s;" % (
-                    str(request.form['email']), str(request.form['first_name']),
-                    str(request.form['last_name']), str(request.form['location']),
-                    str(request.form['homepage']), user_id)
-        result = cur.execute(query)
-        db.commit()
+        try:
+            cur = db.cursor()
+            query = "UPDATE users SET email='%s', first_name='%s', last_name='%s', location='%s', " \
+                    "homepage='%s' WHERE id=%s;" % (
+                        str(request.form['email']), str(request.form['first_name']),
+                        str(request.form['last_name']), str(request.form['location']),
+                        str(request.form['homepage']), user_id)
+            result = cur.execute(query)
+            db.commit()
+        except Exception as e:
+            print(e)
+        finally:
+            cur.close()
+
         flash(u'Profile was successfully updated.', 'success')
         return redirect(url_for('show_user', user_id=user_id))
     else:
-        cur = db.cursor()
-        query = "SELECT * FROM users WHERE username='%s';" % str(session.get('username'))
-        result = cur.execute(query)
-        response = cur.fetchone()
+        try:
+            cur = db.cursor()
+            query = "SELECT * FROM users WHERE username='%s';" % str(session.get('username'))
+            result = cur.execute(query)
+            response = cur.fetchone()
+        except Exception as e:
+            print(e)
+        finally:
+            cur.close()
+
         user = {'id': response[0], 'username': response[1], 'email': response[2], 'first_name': response[3],
                 'last_name': response[4], 'location': response[5], 'homepage': response[6], 'created': response[8]}
         return render_template('settings.html', user=user)
@@ -262,10 +269,16 @@ def settings():
 
 @app.route('/user/<user_id>')
 def show_user(user_id):
-    cur = db.cursor()
-    query = "SELECT * FROM users WHERE id=%s;" % str(user_id)
-    result = cur.execute(query)
-    response = cur.fetchone()
+    try:
+        cur = db.cursor()
+        query = "SELECT * FROM users WHERE id=%s;" % str(user_id)
+        result = cur.execute(query)
+        response = cur.fetchone()
+    except Exception as e:
+        print(e)
+    finally:
+        cur.close()
+
     user = {'id': response[0], 'username': response[1], 'email': response[2], 'first_name': response[3],
             'last_name': response[4], 'location': response[5], 'homepage': response[6], 'created': response[8]}
     return render_template('show_user.html', user=user)
@@ -273,10 +286,16 @@ def show_user(user_id):
 
 @app.route('/job/<job_id>')
 def show_job(job_id):
-    cur = db.cursor()
-    query = "SELECT * FROM jobs WHERE id=%s;" % str(job_id)
-    result = cur.execute(query)
-    response = cur.fetchone()
+    try:
+        cur = db.cursor()
+        query = "SELECT * FROM jobs WHERE id=%s;" % str(job_id)
+        result = cur.execute(query)
+        response = cur.fetchone()
+    except Exception as e:
+        print(e)
+    finally:
+        cur.close()
+
     job = {'id': response[0], 'company_name': response[1], 'company_location': response[2], 'company_url': response[3],
            'job_title': response[4], 'job_posting': response[5], 'application_instructions': response[6],
            'created': response[7]}
@@ -285,13 +304,19 @@ def show_job(job_id):
 
 @app.route('/users')
 def show_all_users():
-    cur = db.cursor()
-    query = "SELECT * FROM users;"
-    result = cur.execute(query)
-    response = cur.fetchall()
-    users = []
+    try:
+        cur = db.cursor()
+        query = "SELECT * FROM users;"
+        result = cur.execute(query)
+        response = cur.fetchall()
+    except Exception as e:
+        print(e)
+    finally:
+        cur.close()
+
+    users = list()
     for item in response:
-        user = {}
+        user = dict()
         user['id'] = item[0]
         user['username'] = item[1]
         user['email'] = item[2]
@@ -305,7 +330,55 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 
+def check_db():
+    try:
+        cur = db.cursor()
+        query = "SELECT * FROM users LIMIT 1;"
+        cur.execute(query)
+    except Exception as e:
+        print(e)
+        cur = db.cursor()
+        query = "CREATE TABLE users(" \
+                "id int NOT NULL AUTO_INCREMENT, " \
+                "username varchar(50), " \
+                "email varchar(200), " \
+                "first_name varchar(50), " \
+                "last_name varchar(50), " \
+                "location varchar(200), " \
+                " homepage varchar(200), " \
+                "passhash varchar(500), " \
+                "created date, " \
+                "KEY(id),PRIMARY KEY(username));"
+        cur.execute(query)
+        db.commit()
+    finally:
+        cur.close()
+
+    try:
+        cur = db.cursor()
+        query = "SELECT * FROM jobs LIMIT 1;"
+        cur.execute(query)
+    except Exception as e:
+        print(e)
+        cur = db.cursor()
+        query = "CREATE TABLE jobs(" \
+                "id int NOT NULL AUTO_INCREMENT," \
+                "company_name varchar(255)," \
+                "company_location varchar(255)," \
+                "company_url varchar(255)," \
+                "job_title varchar(255)," \
+                "job_posting varchar(255)," \
+                "application_instructions varchar(1000)," \
+                "created date, " \
+                "KEY(id), PRIMARY KEY(company_name));"
+        cur.execute(query)
+        db.commit()
+    finally:
+        cur.close()
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
+    check_db()
     app.debug = True
     app.run(host='0.0.0.0', port=port)

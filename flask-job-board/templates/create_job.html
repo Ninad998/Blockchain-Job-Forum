@@ -2,8 +2,6 @@
 
 {% block main %}
 <form method="post" action="/create">
-    <br/>
-    <br/>
     <div class="form-group row">
         <label class="col-sm-2 col-form-label" for='company_name'>Company Name:</label>
         <div class="col-md-4">
@@ -44,10 +42,11 @@
     <div class="form-group row">
         <label class="col-sm-2 col-form-label" for='job_posting'>Job Posting:</label>
         <div class="col-md-4">
-            <textarea class='span12' class="xxlarge" id="job_posting" name="job_posting" rows="15"></textarea>
+            <textarea class="form-control" class="xxlarge" id="job_posting" name="job_posting" rows="15"></textarea>
+            <br/>
             <span class="help-block">
                 Paste in your job description.
-        </span>
+            </span>
         </div>
     </div>
     <br/>

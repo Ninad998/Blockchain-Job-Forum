@@ -53,13 +53,14 @@
     {% if messages %}
     {% for category, message in messages %}
     <div class="alert-message {{ category }} fade in" data-alert='alert'>
-        <!-- Categories are: warning, error, success, info -->
         <a class="close" href="#">×</a>
         <p>{{ message }}</p>
     </div>
     {% endfor %}
     {% endif %}
     {% endwith %}
+    <br/>
+    <br/>
     {% block main %}
     {% endblock %}
 </div>

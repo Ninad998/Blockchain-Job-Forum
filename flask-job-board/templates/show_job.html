@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
 {% block main %}
-<table border="1" width=650px>
+<table class="table">
     <tr>
-        <td width=150px>Company Name</td>
-        <td width=500px>{{ job.company_name }}</td>
+        <td>Company Name</td>
+        <td>{{ job.company_name }}</td>
     </tr>
     <tr>
         <td>Company Location</td>
@@ -17,12 +17,19 @@
     <tr>
         <td>Job Posting</td>
         <td>
-            <pre>{{ job.job_posting }}</pre>
+            {{ job.job_posting }}
         </td>
     </tr>
     <tr>
         <td>Application Instructions</td>
         <td>{{ job.application_instructions }}</td>
     </tr>
+    <tr><td></td><td></td></tr>
 </table>
+{% if session.logged_in %}
+<a href="/apply" class="btn btn-primary">
+    Apply
+</a>
+
+{% endif %}
 {% endblock %}

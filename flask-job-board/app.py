@@ -30,19 +30,25 @@ def timesince(dt, default="just now"):
     Returns string representing "time since" e.g.
     3 days ago, 5 hours ago etc.
     """
-
-    now = datetime.utcnow().date()
+    f = '%Y-%m-%d %H:%M:%S'
+    dt = datetime.strptime(str(dt), f)
+    now = datetime.now()
     diff = now - dt
 
     periods = (
-        (diff.days / 365, "year", "years"), (diff.days / 30, "month", "months"), (diff.days / 7, "week", "weeks"),
-        (diff.days, "day", "days"), (diff.seconds / 3600, "hour", "hours"), (diff.seconds / 60, "minute", "minutes"),
-        (diff.seconds, "second", "seconds"),)
+        (diff.days / 365, "year", "years"),
+        (diff.days / 30, "month", "months"),
+        (diff.days / 7, "week", "weeks"),
+        (diff.days, "day", "days"),
+        (diff.seconds / 3600, "hour", "hours"),
+        (diff.seconds / 60, "minute", "minutes"),
+        (diff.seconds, "second", "seconds"),
+        )
 
     for period, singular, plural in periods:
-
-        if period:
+        if int(period) > 0:
             return "%d %s ago" % (period, singular if period == 1 else plural)
+
     return default
 
 
@@ -58,6 +64,7 @@ def home():
         jobs = list()
         for item in response:
             job = dict()
+            job['id'] = item[0]
             job['company_name'] = item[1]
             job['company_location'] = item[2]
             job['company_url'] = item[3]
@@ -97,11 +104,10 @@ def create_job():
         joblist.append(str(request.form['job_title']))
         joblist.append(str(request.form['job_posting']))
         joblist.append(str(request.form['application_instructions']))
-        joblist.append(datetime.utcnow().date().strftime('%m-%d-%y'))
         cur = db.cursor()
         try:
-            query = "INSERT INTO jobs(company_name, company_location, company_url, job_title, job_posting, " \
-                    "application_instructions, created) VALUES %r;" % (tuple(joblist),)
+            query = "INSERT INTO jobs(company_name, company_location, company_url, " \
+                    "job_title, job_posting, application_instructions) VALUES %r;" % (tuple(joblist),)
             cur.execute(query)
             db.commit()
         except Exception as e:
@@ -135,21 +141,17 @@ def signin():
         if request.form['password'] == request.form['password2']:
             userlist = list()
             userlist.append(str(request.form['username']))
-            userlist.append(str(request.form['email']))
             userlist.append(str(request.form['first_name']))
             userlist.append(str(request.form['last_name']))
-            userlist.append('None')
-            userlist.append('None')
             userlist.append(pbkdf2_sha256.hash(str(request.form['password'])))
-            userlist.append(datetime.utcnow().date().strftime('%m-%d-%y'))
 
             session['username'] = str(request.form['username'])
             session['logged_in'] = True
 
             try:
                 cur = db.cursor()
-                query = "INSERT INTO users(username, email, first_name, last_name, location, homepage, " \
-                        "passhash, created) VALUES %r;" % (tuple(userlist),)
+                query = "INSERT INTO users(username, first_name, last_name, " \
+                        "passhash) VALUES %r;" % (tuple(userlist),)
                 cur.execute(query)
                 db.commit()
             except Exception as e:
@@ -262,8 +264,8 @@ def settings():
         finally:
             cur.close()
 
-        user = {'id': response[0], 'username': response[1], 'email': response[2], 'first_name': response[3],
-                'last_name': response[4], 'location': response[5], 'homepage': response[6], 'created': response[8]}
+        user = {'id': response[0], 'username': response[1], 'first_name': response[2],
+                'last_name': response[3], 'created': response[5]}
         return render_template('settings.html', user=user)
 
 
@@ -279,8 +281,8 @@ def show_user(user_id):
     finally:
         cur.close()
 
-    user = {'id': response[0], 'username': response[1], 'email': response[2], 'first_name': response[3],
-            'last_name': response[4], 'location': response[5], 'homepage': response[6], 'created': response[8]}
+    user = {'id': response[0], 'username': response[1], 'first_name': response[2],
+            'last_name': response[3], 'created': response[5]}
     return render_template('show_user.html', user=user)
 
 
@@ -341,13 +343,10 @@ def check_db():
         query = "CREATE TABLE users(" \
                 "id int NOT NULL AUTO_INCREMENT, " \
                 "username varchar(50), " \
-                "email varchar(200), " \
                 "first_name varchar(50), " \
                 "last_name varchar(50), " \
-                "location varchar(200), " \
-                " homepage varchar(200), " \
                 "passhash varchar(500), " \
-                "created date, " \
+                "created DATETIME DEFAULT CURRENT_TIMESTAMP, " \
                 "KEY(id),PRIMARY KEY(username));"
         cur.execute(query)
         db.commit()
@@ -369,7 +368,7 @@ def check_db():
                 "job_title varchar(255)," \
                 "job_posting varchar(255)," \
                 "application_instructions varchar(1000)," \
-                "created date, " \
+                "created DATETIME DEFAULT CURRENT_TIMESTAMP, " \
                 "KEY(id), PRIMARY KEY(company_name));"
         cur.execute(query)
         db.commit()

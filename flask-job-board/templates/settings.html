@@ -4,7 +4,7 @@
 <h1>Settings</h1>
 <div class='userinfo'>
     <h2>{{ user.username }}</h2>
-    <p><img src='{{ user.email }}' alt='{{ user.username }} avatar'/></p>
+    <p><img src='{{ user.email }}'/></p>
 </div>
 <form method="post" action="/settings">
     <div class="form-group row">
@@ -18,27 +18,6 @@
         <label class="col-sm-2 col-form-label" for='last_name'>Last Name:</label>
         <div class="col-md-4">
             <input class="form-control" id='last_name' name='last_name' type='text' value='{{ user.last_name }}'>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <label class="col-sm-2 col-form-label" for='email'>Email:</label>
-        <div class="col-md-4">
-            <input class="form-control" id='email' name='email' type='text' value='{{ user.email }}'>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <label class="col-sm-2 col-form-label" for='location'>Location:</label>
-        <div class="col-md-4">
-            <input class="form-control" id='location' name='location' type='text' value='{{ user.location }}'>
-        </div>
-    </div>
-
-    <div class="form-group row">
-        <label class="col-sm-2 col-form-label" for='homepage'>Homepage:</label>
-        <div class="col-md-4">
-            <input class="form-control" id='homepage' name='homepage' type='text' value='{{ user.homepage }}'>
         </div>
     </div>
     <br/>

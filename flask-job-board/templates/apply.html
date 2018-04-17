@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block main %}
+<form method="post" enctype="multipart/form-data"  action="/apply/{{ job.id }}">
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='company_name'>Company Name:</label>
+        <div class="col-md-4">
+            <input class="form-control" id='company_name' name='company_name' type='text'
+                   value="{{ job.company_name }}" readonly />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='company_location'>Company Location:</label>
+        <div class="col-md-4">
+            <input class="form-control" id='company_location' name='company_location' type='text'
+                   value="{{ job.company_location }}" readonly />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='company_url'>Company URL:</label>
+        <div class="col-md-4">
+            <input class="form-control" id='company_url' name='company_url' type='text'
+                   value="{{ job.company_url }}" readonly />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='application_instructions'>Application Instructions:</label>
+        <div class="col-md-4">
+            <input class="form-control" id='application_instructions' name='application_instructions'
+                   type='text' value="{{ job.application_instructions }}" readonly />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='job_title'>Job Title:</label>
+        <div class="col-md-4">
+            <input class="form-control" id='job_title' name='job_title' type='text'
+                   value="{{ job.job_title }}" readonly />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='job_posting'>Job Posting:</label>
+        <div class="col-md-4">
+            <textarea class="form-control" id="job_posting" name="job_posting" rows="10" readonly >
+                {{ job.job_posting }}
+            </textarea>
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='application_instructions'>Upload CV:</label>
+        <div class="col-md-4">
+            <input id='cv' name='cv' type='file' required class="form-control" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label class="col-sm-2 col-form-label" for='job_posting'>About you:</label>
+        <div class="col-md-4">
+            <textarea class="form-control" id="desc" name="desc"
+                      rows="10" maxlength="255" required></textarea>
+        </div>
+    </div>
+    <br/>
+
+    <div class="form-group row">
+        <button type="submit" class="btn btn-primary" style="margin-left: 2em">Apply</button>
+        <button type="reset" class="btn btn-secondary-outline" style="margin-left: 2em">Cancel</button>
+    </div>
+</form>
+{% endblock %}

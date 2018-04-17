@@ -1,13 +1,19 @@
 import os
 import pymysql
 from datetime import datetime
+import flask
 from flask import Flask, render_template, request, redirect, url_for, flash, session
+from werkzeug.utils import secure_filename
 from passlib.hash import pbkdf2_sha256
 from functools import wraps
 import settings
 
+UPLOAD_FOLDER = os.path.dirname(os.path.realpath(__file__)) + "/static/images"
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+
 app = Flask(__name__)
 app.config.from_object(settings)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 db = pymysql.connect(db="job_board", host="localhost", user="root", passwd="root", port=3306)
 
@@ -104,10 +110,12 @@ def create_job():
         joblist.append(str(request.form['job_title']))
         joblist.append(str(request.form['job_posting']))
         joblist.append(str(request.form['application_instructions']))
+        joblist.append(str(session['username']))
         cur = db.cursor()
         try:
-            query = "INSERT INTO jobs(company_name, company_location, company_url, " \
-                    "job_title, job_posting, application_instructions) VALUES %r;" % (tuple(joblist),)
+            query = "INSERT INTO jobs(company_name, company_location, " \
+                    "company_url, job_title, job_posting, application_instructions, " \
+                    "createdby) VALUES %r;" % (tuple(joblist),)
             cur.execute(query)
             db.commit()
         except Exception as e:
@@ -298,10 +306,104 @@ def show_job(job_id):
     finally:
         cur.close()
 
+    if 'logged_in' in session and session['logged_in']:
+        allow_apply = not session['username'] == response[8]
+    else:
+        allow_apply = False
+
     job = {'id': response[0], 'company_name': response[1], 'company_location': response[2], 'company_url': response[3],
            'job_title': response[4], 'job_posting': response[5], 'application_instructions': response[6],
-           'created': response[7]}
+           'created': response[7], 'createdby': response[8], 'allow_apply': allow_apply }
     return render_template('show_job.html', job=job)
+
+
+# return list of allowed files
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+
+def saveCV(job_id, username, dir):
+    try:
+        cur = db.cursor()
+        query = "INSERT INTO applications " \
+                "(job_id, username, dir) " \
+                "VALUES (\"%s\", \"%s\", \"%s\");" % (job_id, username, dir)
+        result = cur.execute(query)
+
+        cur.execute("SELECT id FROM applications WHERE dir LIKE '%%%s%%' ORDER BY dateofcreation LIMIT 1;" % dir)
+
+        id = cur.fetchone()[0]
+        db.commit()
+
+    except Exception as e:
+        print(e)
+    finally:
+        cur.close()
+
+    return id
+
+
+@app.route('/apply/<job_id>')
+@login_required
+def apply(job_id):
+    try:
+        cur = db.cursor()
+        query = "SELECT * FROM jobs WHERE id=%s;" % str(job_id)
+        result = cur.execute(query)
+        response = cur.fetchone()
+    except Exception as e:
+        print(e)
+    finally:
+        cur.close()
+
+    allow_apply = not session['username'] == response[8]
+
+    job = {
+        'id': response[0], 'company_name': response[1], 'company_location': response[2], 'company_url': response[3],
+        'job_title': response[4], 'job_posting': response[5], 'application_instructions': response[6],
+        'created': response[7], 'createdby': response[8], 'allow_apply': allow_apply
+    }
+
+    if request.method == 'GET':
+        return render_template('apply.html', job = job)
+
+    try:
+        file = request.files['cv']
+        desc = request.form.get('desc')
+    except:
+        print("couldn't find all tokens")
+        flash(u'Re-upload please', 'error')
+        return render_template('apply.html', job = job)
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        directory = app.config['UPLOAD_FOLDER']
+        name = "/" + str(job_id)
+
+        if not os.path.exists(directory + name):
+            os.makedirs(directory + name)
+
+        listOfFiles = [f for f in os.listdir(directory + name)]
+        i = 1
+        for f in listOfFiles:
+            currentfile = f.split(".")[-2]
+            if i > int(currentfile):
+                pass
+            else:
+                i = int(currentfile) + 1
+
+        file.save(os.path.join(directory + name, filename))
+        source = directory + name + "/" + filename
+        extension = str(filename.split(".")[1])
+
+        newname = directory + name + "/" + str(i) + "." + extension
+        os.rename(source, newname)
+
+        dir = name + "/" + str(i) + "." + extension
+
+        saveCV(job_id, session['username'], dir)
+
+    return flask.redirect(flask.url_for('index'))
 
 
 @app.route('/users')
@@ -368,12 +470,38 @@ def check_db():
                 "job_title varchar(255)," \
                 "job_posting varchar(255)," \
                 "application_instructions varchar(1000)," \
-                "created DATETIME DEFAULT CURRENT_TIMESTAMP, " \
+                "created DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, " \
+                "createdby varchar(50), " \
+                "CONSTRAINT fk_key_1 FOREIGN KEY (createdby) " \
+                "REFERENCES users (username) ON DELETE CASCADE ON UPDATE CASCADE, " \
                 "KEY(id), PRIMARY KEY(company_name));"
         cur.execute(query)
         db.commit()
     finally:
         cur.close()
+
+        try:
+            cur = db.cursor()
+            query = "SELECT * FROM applications LIMIT 1;"
+            cur.execute(query)
+        except Exception as e:
+            print(e)
+            cur = db.cursor()
+            query = "CREATE TABLE applications(" \
+                    "id int NOT NULL AUTO_INCREMENT," \
+                    "jobid int(11) NOT NULL," \
+                    "username varchar(45) NOT NULL," \
+                    "dir varchar(45) DEFAULT NULL," \
+                    "dateofcreation DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," \
+                    "CONSTRAINT fk_key_2 FOREIGN KEY (jobid) " \
+                    "REFERENCES jobs (id) ON DELETE CASCADE ON UPDATE CASCADE, " \
+                    "CONSTRAINT fk_key_3 FOREIGN KEY (username) " \
+                    "REFERENCES users (username) ON DELETE CASCADE ON UPDATE CASCADE, " \
+                    "KEY(id), PRIMARY KEY (jobid, username));"
+            cur.execute(query)
+            db.commit()
+        finally:
+            cur.close()
 
 
 if __name__ == "__main__":

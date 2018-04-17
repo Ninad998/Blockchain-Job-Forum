@@ -26,10 +26,13 @@
     </tr>
     <tr><td></td><td></td></tr>
 </table>
-{% if session.logged_in %}
-<a href="/apply" class="btn btn-primary">
+{% if session.logged_in and job.allow_apply %}
+<a href="/apply/{{ job.id }}" class="btn btn-primary">
     Apply
 </a>
-
+{% else %}
+<a href="/apply/{{ job.id }}" class="btn btn-secondary disabled">
+    Apply
+</a>
 {% endif %}
 {% endblock %}

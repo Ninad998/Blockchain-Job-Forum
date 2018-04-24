@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block main %}
+{% if jobs|length > 0 %}
+<h1> Job Applications! </h1>
+<table class="table">
+    <tr>
+        <td>Application</td>
+        <td>Applier's Full Name</td>
+        <td>Applier's CV</td>
+        <td>About Applier</td>
+    </tr>
+    {% for job in jobs %}
+    <tr>
+        <td>{{ job.dateofcreation|timesince }}</td>
+        <td><a href="/user/{{ job.user.id }}">{{ job.user.first_name }} {{ job.user.last_name }} </a></td>
+        <td><a href="/view/{{ job.cvname }}">Click here to View</a></td>
+        <td>
+            <p>
+                {{ job.desc }}
+            </p>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<h3>No applications yet!</h3>
+{% endif %}
+{% endblock %}

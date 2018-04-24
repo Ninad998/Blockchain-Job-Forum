@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block main %}
+{% if jobs|length > 0 %}
+<h3>Applications set by you, click to view job description again</h3>
+{% for job in jobs %}
+Created {{ job.created|timesince }}. <a href="/job/{{ job.id }}">{{ job.company_name }} - {{ job.job_title }}</a>
+<br/>
+{% endfor %}
+{% else %}
+<h3>You haven't applied to any jobs yet!</h3>
+{% endif %}
+{% endblock %}

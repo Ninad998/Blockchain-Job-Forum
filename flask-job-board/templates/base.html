@@ -2,7 +2,7 @@
 <head>
     <meta charset="utf-8">
 
-    <title>{% block title %}Flask Job Board Example{% endblock %}</title>
+    <title>Flask Job Board Example</title>
 
     <meta name="description" content="Example of a job board run off of flask using Mongodb.">
     <meta name="viewport" content="width=980">
@@ -26,13 +26,17 @@
                 </li>
                 {% if session.logged_in %}
                 <li class="nav-item">
+                    <a class="nav-link" href='/applied'>Jobs Applied</a>
+                <li class="nav-item">
+                    <a class="nav-link" href='/company'>Company Portal</a>
+                <li class="nav-item">
                     <a class="nav-link" href='/logout'>Log out</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href='/settings'>Settings</a>
                 </li>
                 <span class="navbar-text">
-                Welcome {{ session['username'] }}!
+                Welcome {{ session.username }}!
                 </span>
                 </p>
                 {% else %}
@@ -52,8 +56,8 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     {% for category, message in messages %}
-    <div class="alert-message {{ category }} fade in" data-alert='alert'>
-        <a class="close" href="#">×</a>
+    <div class="text-danger">
+        <a class="close" href="javascript:window.location.reload(true)">x</a>
         <p>{{ message }}</p>
     </div>
     {% endfor %}

@@ -102,3 +102,10 @@ ENV/
 
 # user added
 .~lock.*
+
+# uploads will not be synced
+*.txt
+*.pdf
+*.png
+*.jpg
+*.jpeg

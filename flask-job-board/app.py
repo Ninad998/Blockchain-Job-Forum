@@ -11,7 +11,6 @@ import settings
 import flask_login
 import pandas as pd
 from uuid import uuid4
-from functools import wraps
 from datetime import datetime
 from flaskext.mysql import MySQL
 from blockchain import BlockChain
@@ -568,38 +567,6 @@ def show_job(job_id):
     return render_template('show_job.html', job=job)
 
 
-# return list of allowed files
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-
-
-def saveCV(job_id, username, dir, desc):
-    id = 0
-    try:
-        db = getMysqlConnection()
-        conn = db['conn']
-        cursor = db['cursor']
-        query = "INSERT INTO applications " \
-                "(jobid, username, dir, description) " \
-                "VALUES (\"%s\", \"%s\", \"%s\", \"%s\");" % (
-                    job_id, username, dir, desc)
-        result = cursor.execute(query)
-
-        cursor.execute(
-            "SELECT id FROM applications WHERE dir LIKE '%%%s%%' ORDER BY dateofcreation LIMIT 1;" % dir)
-
-        id = cursor.fetchone()[0]
-        conn.commit()
-
-    except Exception as e:
-        print(e)
-    finally:
-        cursor.close()
-        conn.close()
-
-    return id
-
-
 @app.route('/apply/<job_id>', methods=['GET', 'POST'])
 @flask_login.login_required
 def apply(job_id):
@@ -639,40 +606,23 @@ def apply(job_id):
         return render_template('apply.html', job=job)
 
     try:
-        file = request.files['cv']
+        db = getMysqlConnection()
+        username = session['username']
         desc = request.form.get('desc')
-    except:
-        print("couldn't find all tokens")
-        flash(u'Re-upload please', 'error')
-        return render_template('apply.html', job=job)
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "INSERT INTO applications " \
+                "(jobid, username, description) " \
+                "VALUES (\"%s\", \"%s\", \"%s\");" % (job_id, username, desc)
 
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        directory = app.config['UPLOAD_FOLDER']
-        name = "/" + str(job_id)
+        result = cursor.execute(query)
+        conn.commit()
 
-        if not os.path.exists(directory + name):
-            os.makedirs(directory + name)
-
-        listOfFiles = [f for f in os.listdir(directory + name)]
-        i = 1
-        for f in listOfFiles:
-            currentfile = f.split(".")[-2]
-            if i > int(currentfile):
-                pass
-            else:
-                i = int(currentfile) + 1
-
-        file.save(os.path.join(directory + name, filename))
-        source = directory + name + "/" + filename
-        extension = str(filename.split(".")[1])
-
-        newname = directory + name + "/" + str(i) + "." + extension
-        os.rename(source, newname)
-
-        dir = name + "/" + str(i) + "." + extension
-
-        saveCV(job_id, flask_login.current_user.id, dir, desc)
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
 
     return flask.redirect(flask.url_for('home'))
 
@@ -773,11 +723,8 @@ def list_applications(job_id):
             job['id'] = item[0]
             job['jobid'] = item[1]
             job['username'] = item[2]
-            job['dir'] = item[3]
-            job['cvname'] = item[3].split(
-                "/")[1] + "_" + item[3][3].split(".")[0]
-            job['desc'] = item[4]
-            job['dateofcreation'] = item[5]
+            job['desc'] = item[3]
+            job['dateofcreation'] = item[4]
             query = "SELECT * FROM users WHERE username='%s';" % str(item[2])
             result = cursor.execute(query)
             response = cursor.fetchone()
@@ -790,16 +737,6 @@ def list_applications(job_id):
         cursor.close()
         conn.close()
     return render_template('list_applications.html', jobs=jobs)
-
-
-@app.route('/view/<cvname>')
-@flask_login.login_required
-def viewpdf(cvname):
-    path = "documents/" + \
-        cvname.split("_")[0] + "/" + cvname.split("_")[1] + ".pdf"
-    cvpath = url_for("static", filename=path)
-    print(cvpath)
-    return render_template('view_pdf.html', cvpath=cvpath)
 
 
 @app.errorhandler(404)
@@ -878,7 +815,6 @@ def check_db():
                     "id int NOT NULL AUTO_INCREMENT," \
                     "jobid int(11) NOT NULL," \
                     "username varchar(45) NOT NULL," \
-                    "dir varchar(45) DEFAULT NULL," \
                     "description varchar(255)," \
                     "dateofcreation DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," \
                     "CONSTRAINT fk_key_2 FOREIGN KEY (jobid) " \

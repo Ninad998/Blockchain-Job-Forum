@@ -14,11 +14,11 @@
     <tr>
         <td>{{ job.dateofcreation|timesince }}</td>
         <td><a href="/user/{{ job.user.id }}">{{ job.user.first_name }} {{ job.user.last_name }} </a></td>
-        <td><a href="/view/{{ job.cvname }}">Click here to View</a></td>
         <td>
             <p>
                 {{ job.desc }}
             </p>
+        </td>
     </tr>
     {% endfor %}
 </table>

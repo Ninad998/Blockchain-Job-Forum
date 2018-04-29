@@ -699,7 +699,7 @@ def apply(job_id):
         }
     transaction_data['application'] = application_form_data
     transaction_data['job'] = deepcopy(get_job_details_blockchain(str(job_id))[0])
-    transaction_data['user'] = deepcopy(get_user_details_blockchain(username = session['username'])[0])
+    transaction_data['user'] = deepcopy(get_user_details_blockchain(username=session['username'])[0])
     index = blockchain.create_new_transaction(transaction_data)
     print("index", index)
     # NOTE: Can be used later
@@ -826,17 +826,22 @@ def selection_possible(job_id):
 @app.route('/list_applications/<job_id>')
 @flask_login.login_required
 def list_applications(job_id):
-    application = get_application_details_blockchain(job_id = str(job_id))
+    application = get_application_details_blockchain(job_id = str(job_id))[0]
     print("application", application)
     jobs = []
     for each_application in application:
         job = deepcopy(each_application)
-        print(job)
-        job['user'] = deepcopy(get_user_details_blockchain(username = str(job['username']))[0])
-        if get_job_status(str(job['user']['username'])):
-            job['user']['selected'] = True
+        if get_job_status():
+            job['select_possible'] = True
         else:
-            job['user']['selected'] = False
+            job['select_possible'] = False
+        print(job)
+        job['user']= deepcopy(get_user_details_blockchain(username=str(job['username']))[0])
+        if not job['select_possible']:
+            if get_job_status(str(job['user']['username'])):
+                job['user']['selected']= True
+            else:
+                job['user']['selected']= False
         jobs.append(job)
     # jobs = list()
     # try:
@@ -881,7 +886,9 @@ def mark_completed(job_id):
 @flask_login.login_required
 def mark_selected(application_id):
     # Block chain initailization
+    print("application_id",application_id)
     application = get_application_details_blockchain(app_id = application_id)
+    print("application",application)
     transaction_data = {}
     job_status = {
         'id': len(get_job_status()) + 1,
@@ -905,8 +912,7 @@ def mark_selected(application_id):
 
     if result.get('status', False):
         print("applications mined!")
-
-    return redirect(url_for(list_applications, job_id = job_id))
+    return redirect(url_for(list_applications, job_id=application['job_id']))
 
 
 @app.errorhandler(404)

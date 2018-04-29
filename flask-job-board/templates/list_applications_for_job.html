@@ -7,7 +7,7 @@
     <tr>
         <td>Applicant's Full Name</td>
         <td>About Applicant</td>
-        <td>Applicant Status</td>
+        <td>Job Status</td>
     </tr>
     {% for job in jobs %}
     <tr>
@@ -20,16 +20,20 @@
             </p>
         </td>
         <td>
-            {% if job.selection_possible %}
-            {% if not job.user.selected %}
-            <a href="/mark_selected/{{ job.id }}" class="btn btn-secondary">
+            {% if job.select_possible %}
+            <a href="/mark_selected/{{ job.id }}" class="btn btn-primary">
                 Select
             </a>
-            {% endif %}
             {% else %}
-            <a href="/mark_selected/{{ job.id }}" class="btn btn-secondary disabled">
-                Someone already selected for job
-            </a>
+                {% if job.user.selected %}
+                <a href="/#" class="btn btn-secondary disabled">
+                    User selected, job not yet completed
+                </a>
+                {% else %}
+                <a href="/#" class="btn btn-secondary disabled">
+                    Someone already selected for job
+                </a>
+                {% endif %}
             {% endif %}
         </td>
     </tr>

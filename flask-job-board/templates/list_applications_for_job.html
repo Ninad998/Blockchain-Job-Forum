@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block main %}
+{% if jobs|length > 0 %}
+<h1> Job Applications! </h1>
+<table class="table">
+    <tr>
+        <td>Application</td>
+        <td>Applier's Full Name</td>
+        <td>Applier's CV</td>
+        <td>About Applier</td>
+        <td></td>
+    </tr>
+    {% for job in jobs %}
+    <tr>
+        <td>{{ job.dateofcreation|timesince }}</td>
+        <td>
+            <a href="/user/{{ job.user.id }}">{{ job.user.first_name }} {{ job.user.last_name }} </a>
+        </td>
+        <td>
+            <p>
+                {{ job.desc }}
+            </p>
+        </td>
+        <td>
+            {% if job.user.selected %}
+            <a href="/mark_selected/{{ job.user.id }}" class="btn btn-secondary disabled">
+                Job not yet completed
+            </a>
+            {% elif job.selection_possible %}
+            <a href="/mark_selected/{{ job.user.id }}" class="btn btn-secondary">
+                Select
+            </a>
+            {% else %}
+            <a href="/mark_selected/{{ job.user.id }}" class="btn btn-secondary disabled">
+                Someone already selected for job
+            </a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<h3>No applications yet!</h3>
+{% endif %}
+{% endblock %}

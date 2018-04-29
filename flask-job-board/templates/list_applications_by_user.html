@@ -2,7 +2,7 @@
 
 {% block main %}
 {% if jobs|length > 0 %}
-<h3>Applications set by you, click to view job description again</h3>
+<h3>Applications sent by you, click to view job description again</h3>
 {% for job in jobs %}
 Created {{ job.created|timesince }}. <a href="/job/{{ job.id }}">{{ job.company_name }} - {{ job.job_title }}</a>
 <br/>

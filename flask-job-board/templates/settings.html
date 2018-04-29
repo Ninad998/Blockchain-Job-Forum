@@ -2,11 +2,8 @@
 
 {% block main %}
 <h1>Settings</h1>
-<div class='userinfo'>
-    <h2>{{ user.username }}</h2>
-    <p><img src='{{ user.email }}'/></p>
-</div>
 <form method="post" action="/settings">
+    <input type="hidden" class="form-control" id='username' name='username' value='{{ user.username }}'>
     <div class="form-group row">
         <label class="col-sm-2 col-form-label" for='first_name'>First Name:</label>
         <div class="col-md-4">

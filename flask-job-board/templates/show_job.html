@@ -26,6 +26,21 @@
     </tr>
     <tr><td></td><td></td></tr>
 </table>
+
+{% if applied %}
+
+{% if selected %}
+<a href="/mark_completed/{{ job.id }}" class="btn btn-secondary">
+    Mark job completed
+</a>
+{% else %}
+<a href="/mark_completed/{{ job.id }}" class="btn btn-secondary disabled">
+    Not yet selected for the job
+</a>
+{% endif %}
+
+{% else %}
+
 {% if session.logged_in and job.allow_apply %}
 <a href="/apply/{{ job.id }}" class="btn btn-primary">
     Apply
@@ -35,4 +50,7 @@
     Apply
 </a>
 {% endif %}
+
+{% endif %}
+
 {% endblock %}

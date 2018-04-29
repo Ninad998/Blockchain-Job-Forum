@@ -136,35 +136,40 @@ def check_applications(job_id, username):
 
 def get_user_details_blockchain(user_id = '', username = ''):
     chain = blockchain.get_serialized_chain
-    print("user_id", user_id)
-    blockchain_user_list = []
+    count = 0
     for each_block in reversed(chain):
         if each_block.get('body', []):
-            if not each_block['body'][0].get('application') and not each_block['body'][0].get('job'):
+            if each_block['body'][0].get('user'):
+                count += 1
                 if user_id:
                     if each_block['body'][0]['user']['id'] == int(user_id):
-                        blockchain_user_list.append(each_block['body'][0].get('user'))
-                        break
+                        return deepcopy(each_block['body'][0].get('user'))
                 elif username:
+                    print("data",each_block['body'][0]['user'])
                     if each_block['body'][0]['user']['username'] == username:
-                        blockchain_user_list.append(each_block['body'][0].get('user'))
-                        break
-                else:
-                    blockchain_user_list.append(each_block['body'][0].get('user'))
-    return blockchain_user_list
+                        return deepcopy(each_block['body'][0].get('user'))
+    return count
 
 
-def get_job_details_blockchain(job_id = '', username = ''):
+def get_job_details_blockchain(job_id = ''):
+    chain = blockchain.get_serialized_chain
+    count=0
+    for each_block in reversed(chain):
+        if each_block.get('body', []):
+            if each_block['body'][0].get('job'):
+                count += 1
+                if job_id:
+                    if each_block['body'][0]['job']['id'] == int(job_id):
+                        return each_block['body'][0].get('job')
+    return count
+
+def get_job_list(username = ''):
     chain = blockchain.get_serialized_chain
     blockchain_job_list = []
     for each_block in reversed(chain):
         if each_block.get('body', []):
-            if not each_block['body'][0].get('application') and each_block['body'][0].get('job'):
-                if job_id:
-                    if each_block['body'][0]['job']['id'] == int(job_id):
-                        blockchain_job_list.append(each_block['body'][0].get('job'))
-                        break
-                elif username:
+            if each_block['body'][0].get('job'):
+                if username:
                     if each_block['body'][0]['user']['username'] == username:
                         blockchain_job_list.append(each_block['body'][0].get('job'))
                 else:
@@ -175,19 +180,27 @@ def get_job_details_blockchain(job_id = '', username = ''):
 def get_application_details_blockchain(job_id = '', username = '', app_id = ''):
     chain = blockchain.get_serialized_chain
     blockchain_application_list = []
+    count = 0
     for each_block in reversed(chain):
         if each_block.get('body', []):
             if each_block['body'][0].get('application') and each_block['body'][0].get('job'):
+                count +=1 
                 if app_id:
                     if int(each_block['body'][0]['application']['id']) == int(app_id):
-                        blockchain_application_list.append(each_block['body'][0].get('application'))
-                        break
+                        return each_block['body'][0].get('application')
                 elif job_id and username:
                     if int(each_block['body'][0]['application']['job_id']) == int(job_id) and \
                             each_block['body'][0]['application']['username'] == username:
-                        blockchain_application_list.append(each_block['body'][0].get('application'))
-                        break
-                elif job_id:
+                        return each_block['body'][0].get('application')
+    return count
+
+def get_application_list(job_id = '', username = ''):
+    chain = blockchain.get_serialized_chain
+    blockchain_application_list = []
+    for each_block in reversed(chain):
+        if each_block.get('body', []):
+            if each_block['body'][0].get('application') and each_block['body'][0].get('job'):
+                if job_id:
                     if int(each_block['body'][0]['application']['job_id']) == int(job_id):
                         blockchain_application_list.append(each_block['body'][0].get('application'))
                 elif username:
@@ -196,19 +209,6 @@ def get_application_details_blockchain(job_id = '', username = '', app_id = ''):
                 else:
                     blockchain_application_list.append(each_block['body'][0].get('application'))
     return blockchain_application_list
-
-
-def get_job_status(username = ""):
-    chain = blockchain.get_serialized_chain
-    blockchain_job_status = []
-    for each_block in reversed(chain):
-        if each_block.get('body', []):
-            if each_block['body'][0].get('job_status') and each_block['body'][0]['job_status']['username'] == username:
-                blockchain_job_status.append(each_block['body'][0].get('job_status'))
-                break
-            else:
-                blockchain_job_status.append(each_block['body'][0].get('job_status'))
-    return blockchain_job_status
 
 
 def generatejob(response):
@@ -242,8 +242,7 @@ def getuser(response):
 
 @app.route("/")
 def home():
-    jobs = list()
-    response = get_job_details_blockchain()
+    jobs = get_job_list()
     if response:
         jobs = response
     print("jobs", jobs)
@@ -290,7 +289,7 @@ def create_job():
         joblist.append(str(flask_login.current_user.id))
 
         # Block chain initailization
-        transaction_data = {'user': {"username": str(session.get('username'))}}
+        transaction_data = {}
         job_form_data = {
             'company_name': str(request.form['company_name']),
             'company_location': str(request.form['company_location']),
@@ -301,6 +300,7 @@ def create_job():
             'createdby': flask_login.current_user.id,
             'created': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
             'id': len(get_job_details_blockchain()) + 1
+            'status':'not_selected'
             }
         print("job_form_data", job_form_data)
         transaction_data['job'] = job_form_data
@@ -372,7 +372,7 @@ def signup():
             # Block chain initailization
             transaction_data = {}
             user_form_data = {
-                'id': len(get_user_details_blockchain()) + 1,
+                'id': get_user_details_blockchain(),
                 'username': str(request.form['username']),
                 'first_name': str(request.form['first_name']),
                 'last_name': str(request.form['last_name']),
@@ -698,8 +698,8 @@ def apply(job_id):
         'dateofcreation': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         }
     transaction_data['application'] = application_form_data
-    transaction_data['job'] = deepcopy(get_job_details_blockchain(str(job_id))[0])
-    transaction_data['user'] = deepcopy(get_user_details_blockchain(username=session['username'])[0])
+    # transaction_data['job'] = deepcopy(get_job_details_blockchain(str(job_id))[0])
+    # transaction_data['user'] = deepcopy(get_user_details_blockchain(username=session['username'])[0])
     index = blockchain.create_new_transaction(transaction_data)
     print("index", index)
     # NOTE: Can be used later
@@ -826,22 +826,23 @@ def selection_possible(job_id):
 @app.route('/list_applications/<job_id>')
 @flask_login.login_required
 def list_applications(job_id):
-    application = get_application_details_blockchain(job_id = str(job_id))[0]
+    application = get_application_details_blockchain(job_id = str(job_id))
     print("application", application)
     jobs = []
     for each_application in application:
         job = deepcopy(each_application)
-        if get_job_status():
+        print(get_job_status(str(job_id)))
+        if get_job_status(str(job_id)):
             job['select_possible'] = True
         else:
             job['select_possible'] = False
-        print(job)
         job['user']= deepcopy(get_user_details_blockchain(username=str(job['username']))[0])
         if not job['select_possible']:
             if get_job_status(str(job['user']['username'])):
                 job['user']['selected']= True
             else:
                 job['user']['selected']= False
+        print(job)
         jobs.append(job)
     # jobs = list()
     # try:
@@ -886,18 +887,11 @@ def mark_completed(job_id):
 @flask_login.login_required
 def mark_selected(application_id):
     # Block chain initailization
-    print("application_id",application_id)
-    application = get_application_details_blockchain(app_id = application_id)
-    print("application",application)
-    transaction_data = {}
-    job_status = {
-        'id': len(get_job_status()) + 1,
-        'job_id': str(application['job_id']),
-        'username': str(application['username']),
-        'application_id': str(application_id),
-        'date_of_selection': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        }
-    transaction_data['job_status'] = job_status
+    application = get_application_details_blockchain(app_id = application_id)[0]
+    job = get_job_details_blockchain(str(application['job_id']))[0]
+    job['status'] = 'assigned'
+    job['username'] = application['username']
+    transaction_data={'job':job}
     index = blockchain.create_new_transaction(transaction_data)
     print("index", index)
     # NOTE: Can be used later
@@ -912,7 +906,7 @@ def mark_selected(application_id):
 
     if result.get('status', False):
         print("applications mined!")
-    return redirect(url_for(list_applications, job_id=application['job_id']))
+    return redirect(url_for('list_applications', job_id=int(application['job_id'])))
 
 
 @app.errorhandler(404)

@@ -78,7 +78,6 @@ class BlockChain(object):
             'user': data.get('user',{}),
             'job': data.get('job',{}),
             'application': data.get('application',{}),
-            'job_status': data.get('application',{}),
             'mine_transactions':data.get('mine_transactions',{})
         })
         return True

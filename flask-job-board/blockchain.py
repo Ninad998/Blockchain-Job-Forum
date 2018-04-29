@@ -10,14 +10,24 @@ class Block(object):
         self.previous_hash = previous_hash
         self.body = body
         self.timestamp = timestamp or time.time()
+        self.nonce, self.hash = self.compute_hash_with_proof_of_work()
 
-    @property
-    def get_block_hash(self):
-        block_string = "{}{}{}{}{}".format(self.index, self.proof, self.previous_hash, self.body, self.timestamp)
+    # Compute hash based upon the nonce value
+    def compute_hash_with_proof_of_work( self, difficulty="00" ):
+        nonce = 0
+        while True:    # Infinite loop  
+          hash = self.get_block_hash( nonce )
+          if hash.startswith( difficulty ):
+            return [nonce,hash]    ## bingo! proof of work if hash starts with leading zeros (00)
+          else:
+            nonce += 1             ## keep trying (and trying and trying)
+
+    def get_block_hash(self, nonce=0):
+        block_string = "{}{}{}{}{}{}".format(str(nonce), self.index, self.proof, self.previous_hash, self.body, self.timestamp)
         return hashlib.sha256(block_string.encode()).hexdigest()
 
     def __repr__(self):
-        return "{} - {} - {} - {} - {}".format(self.index, self.proof, self.previous_hash, self.body, self.timestamp)
+        return "{} - {} - {} - {} - {} - {} - {}".format(self.index, self.proof, self.previous_hash, self.body, self.timestamp, self.nonce, self.hash)
 
 
 class BlockChain(object):
@@ -68,6 +78,7 @@ class BlockChain(object):
             'user': data.get('user',{}),
             'job': data.get('job',{}),
             'application': data.get('application',{}),
+            'job_status': data.get('application',{}),
             'mine_transactions':data.get('mine_transactions',{})
         })
         return True
@@ -118,11 +129,11 @@ class BlockChain(object):
 
         return True
 
-    def mine_block(self, miner_address):
+    def mine_block(self, sender_address, miner_address):
         # Sender "0" means that this node has mined a new block
         # For mining the Block(or finding the proof), we must be awarded with some amount(in our case this is 1)
         
-        self.current_node_transactions[-1]['mine_transactions']={'sender':"0",
+        self.current_node_transactions[-1]['mine_transactions']={'sender':sender_address,
                                 'recipient':miner_address,
                                 'amount':1}
 
@@ -131,7 +142,7 @@ class BlockChain(object):
         last_proof = last_block.proof
         proof = self.create_proof_of_work(last_proof)
 
-        last_hash = last_block.get_block_hash
+        last_hash = last_block.hash
         block = self.create_new_block(proof, last_hash)
 
         return vars(block)  # Return a native Dict type object

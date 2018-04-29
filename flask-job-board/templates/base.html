@@ -2,7 +2,7 @@
 <head>
     <meta charset="utf-8">
 
-    <title>Flask Job Board Example</title>
+    <title>Drive Freelance</title>
 
     <meta name="description" content="Example of a job board run off of flask using Mongodb.">
     <meta name="viewport" content="width=980">
@@ -16,7 +16,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="fill">
         <div class="collapse navbar-collapse">
-            <a class="navbar-brand" href="/">Flask Job Board</a>
+            <a class="navbar-brand" href="/">Drive Freelance</a>
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item">
                     <a class="nav-link" href="/about">About</a>
@@ -24,9 +24,12 @@
                 {% if session.logged_in %}
                 {% if session.account_type == 'user' %}
                 <li class="nav-item">
+                    <a class="nav-link" href="/">Jobs</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href='/jobs_applied'>Jobs Applied</a>
                 </li>
-                (% else %)
+                {% else %}
                 <li class="nav-item">
                     <a class="nav-link" href='/company'>Company Portal</a>
                 </li>

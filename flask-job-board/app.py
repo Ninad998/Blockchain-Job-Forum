@@ -1,8 +1,8 @@
 """
 Team: 
 Ninad Tungare        U49815021
-Harshad Nalla Reddy  U
-Chunar Singh         U
+Harshad Nalla Reddy  U60360285
+Chunar Singh         U10488522
 
 """
 # Packages
@@ -12,6 +12,7 @@ import settings
 import flask_login
 import pandas as pd
 from uuid import uuid4
+from copy import deepcopy
 from datetime import datetime
 from flaskext.mysql import MySQL
 from blockchain import BlockChain
@@ -78,7 +79,6 @@ def timesince(dt, default = "just now"):
     3 days ago, 5 hours ago etc.
     """
     f = '%Y-%m-%d %H:%M:%S'
-    print("date", dt)
     dt = datetime.strptime(str(dt), f)
     now = datetime.now()
     diff = now - dt
@@ -109,36 +109,44 @@ def login_user(username, account_type):
     session['account_type'] = account_type
 
 
-def check_applications(username):
+def check_applications(job_id,username):
     ret = False
-    try:
-        user = str(flask_login.current_user.id)
-        db = getMysqlConnection()
-        conn = db['conn']
-        cursor = db['cursor']
-        query = "SELECT * FROM applications WHERE username LIKE '%%%s%%';" % user
-        cursor.execute(query)
-        response = cursor.fetchall()
-        if len(response) > 0:
-            ret = True
-    except Exception as e:
-        print(e)
-    finally:
-        cursor.close()
-        conn.close()
+    jobs=get_application_details_blockchain(job_id= job_id,username= username)
+    print("application already filled",jobs)
+    if len(jobs)>0:
+        ret = True
+    # try:
+    #     user = str(flask_login.current_user.id)
+    #     db = getMysqlConnection()
+    #     conn = db['conn']
+    #     cursor = db['cursor']
+    #     query = "SELECT * FROM applications WHERE username LIKE '%%%s%%' and job_id = '%s';" % user,job_id
+    #     cursor.execute(query)
+    #     response = cursor.fetchall()
+    #     if len(response) > 0:
+    #         ret = True
+    # except Exception as e:
+    #     print(e)
+    # finally:
+    #     cursor.close()
+    #     conn.close()
 
     return ret
 
 
-def get_user_details_blockchain(user_id = ''):
+def get_user_details_blockchain(user_id = '', username = ''):
     chain = blockchain.get_serialized_chain
     print("user_id", user_id)
     blockchain_user_list = []
-    for each_block in chain:
+    for each_block in reversed(chain):
         if each_block.get('body', []):
             if not each_block['body'][0].get('application') and not each_block['body'][0].get('job'):
                 if user_id:
                     if each_block['body'][0]['user']['id'] == int(user_id):
+                        blockchain_user_list.append(each_block['body'][0].get('user'))
+                        break
+                elif username:
+                    if each_block['body'][0]['user']['username'] == username:
                         blockchain_user_list.append(each_block['body'][0].get('user'))
                         break
                 else:
@@ -146,27 +154,65 @@ def get_user_details_blockchain(user_id = ''):
     return blockchain_user_list
 
 
-def get_job_details_blockchain(job_id = ''):
+def get_job_details_blockchain(job_id = '',username =''):
     chain = blockchain.get_serialized_chain
-    print("chain", chain)
     blockchain_job_list = []
-    for each_block in chain:
+    for each_block in reversed(chain):
         if each_block.get('body', []):
             if not each_block['body'][0].get('application') and each_block['body'][0].get('job'):
                 if job_id:
                     if each_block['body'][0]['job']['id'] == int(job_id):
                         blockchain_job_list.append(each_block['body'][0].get('job'))
                         break
+                elif username:
+                    if each_block['body'][0]['user']['username'] == username:
+                        blockchain_job_list.append(each_block['body'][0].get('job'))
                 else:
                     blockchain_job_list.append(each_block['body'][0].get('job'))
     return blockchain_job_list
+
+def get_application_details_blockchain(job_id='', username='',app_id=''):
+    chain = blockchain.get_serialized_chain
+    blockchain_application_list = []
+    for each_block in reversed(chain):
+        if each_block.get('body', []):
+            if each_block['body'][0].get('application') and each_block['body'][0].get('job'):
+                if app_id:
+                    if int(each_block['body'][0]['application']['id']) == int(app_id):
+                        blockchain_application_list.append(each_block['body'][0].get('application'))
+                        break
+                elif job_id and username:
+                    if int(each_block['body'][0]['application']['job_id']) == int(job_id) and each_block['body'][0]['application']['username'] == username:
+                        blockchain_application_list.append(each_block['body'][0].get('application'))
+                        break
+                elif job_id:
+                    if int(each_block['body'][0]['application']['job_id']) == int(job_id):
+                        blockchain_application_list.append(each_block['body'][0].get('application'))
+                elif username:
+                    if each_block['body'][0]['application']['username'] == username:
+                        blockchain_application_list.append(each_block['body'][0].get('application'))
+                else:
+                    blockchain_application_list.append(each_block['body'][0].get('application'))
+    return blockchain_application_list
+
+def get_job_status(username=""):
+    chain = blockchain.get_serialized_chain
+    blockchain_job_status = []
+    for each_block in reversed(chain):
+        if each_block.get('body', []):
+            if each_block['body'][0].get('job_status') and each_block['body'][0]['job_status']['username']==username:
+                blockchain_job_status.append(each_block['body'][0].get('job_status'))
+                break
+            else:
+                blockchain_job_status.append(each_block['body'][0].get('job_status'))
+    return blockchain_job_status
 
 
 def generatejob(response):
     if flask_login.current_user.is_authenticated:
         allow_apply = not flask_login.current_user.id == response[8]
-        allow_apply = allow_apply and not check_applications(
-            flask_login.current_user.id)
+        # allow_apply = allow_apply and not check_applications(
+        #     flask_login.current_user.id)
     else:
         allow_apply = False
 
@@ -197,6 +243,7 @@ def home():
     response = get_job_details_blockchain()
     if response:
         jobs = response
+    print("jobs",jobs)
     # else:
     #     try:
     #         db = getMysqlConnection()
@@ -250,7 +297,7 @@ def create_job():
             'application_instructions': str(request.form['application_instructions']),
             'createdby': flask_login.current_user.id,
             'created': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-            'id': len(get_job_details_blockchain())
+            'id': len(get_job_details_blockchain())+1
             }
         print("job_form_data", job_form_data)
         transaction_data['job'] = job_form_data
@@ -262,41 +309,41 @@ def create_job():
             'block_index': index
             }
         if index:
-            result = mine()
+            result = mine(uuid4().hex)
         if result.get('status', False):
-            try:
-                db = getMysqlConnection()
-                conn = db['conn']
-                cursor = db['cursor']
-                query = "INSERT INTO jobs(company_name, company_location, " \
-                        "company_url, job_title, job_posting, application_instructions, " \
-                        "createdby) VALUES %r;" % (tuple(joblist),)
-                cursor.execute(query)
-                conn.commit()
-            except Exception as e:
-                print(e)
-            finally:
-                cursor.close()
-            conn.close()
+            # try:
+            #     db = getMysqlConnection()
+            #     conn = db['conn']
+            #     cursor = db['cursor']
+            #     query = "INSERT INTO jobs(company_name, company_location, " \
+            #             "company_url, job_title, job_posting, application_instructions, " \
+            #             "createdby) VALUES %r;" % (tuple(joblist),)
+            #     cursor.execute(query)
+            #     conn.commit()
+            # except Exception as e:
+            #     print(e)
+            # finally:
+            #     cursor.close()
+            # conn.close()
 
-            try:
-                db = getMysqlConnection()
-                conn = db['conn']
-                cursor = db['cursor']
-                query = "SELECT id FROM jobs ORDER BY id DESC LIMIT 1;"
-                cursor.execute(query)
-                response = cursor.fetchone()
-            except Exception as e:
-                print(e)
-            finally:
-                cursor.close()
-                conn.close()
+            # try:
+            #     db = getMysqlConnection()
+            #     conn = db['conn']
+            #     cursor = db['cursor']
+            #     query = "SELECT id FROM jobs ORDER BY id DESC LIMIT 1;"
+            #     cursor.execute(query)
+            #     response = cursor.fetchone()
+            # except Exception as e:
+            #     print(e)
+            # finally:
+            #     cursor.close()
+            #     conn.close()
 
-            job_id = 0
-            for lastID in response:
-                job_id = lastID
+            # job_id = 0
+            # for lastID in response:
+            #     job_id = lastID
             # according to blockchain
-            next_url = len(get_job_details_blockchain()) - 1
+            next_url = len(get_job_details_blockchain())
             flash(u'Job successfully created.', 'success')
             return redirect(url_for('show_job', job_id = next_url))
 
@@ -322,7 +369,7 @@ def signup():
             # Block chain initailization
             transaction_data = {}
             user_form_data = {
-                'id': len(get_user_details_blockchain()),
+                'id': len(get_user_details_blockchain())+1,
                 'username': str(request.form['username']),
                 'first_name': str(request.form['first_name']),
                 'last_name': str(request.form['last_name']),
@@ -340,44 +387,45 @@ def signup():
 
             # Prompt message to user can be given to confirm the mine of blockchain.
             if index:
-                result = mine()
+                result = mine(uuid4().hex)
 
             if result.get('status', False):
-                try:
-                    db = getMysqlConnection()
-                    conn = db['conn']
-                    cursor = db['cursor']
-                    query = "INSERT INTO users " \
-                            "(id, username, first_name, last_name, passhash, account_type)" \
-                            "VALUES %r;" % tuple(userlist)
-                    cursor.execute(query)
-                    conn.commit()
-                except Exception as e:
-                    print(e)
-                finally:
-                    cursor.close()
-                    conn.close()
+                print("userlist", userlist)
+                # try:
+                #     db = getMysqlConnection()
+                #     conn = db['conn']
+                #     cursor = db['cursor']
+                #     query = "INSERT INTO users " \
+                #             "(username, first_name, last_name, passhash, account_type)" \
+                #             "VALUES %r;" % (tuple(userlist),)
+                #     cursor.execute(query)
+                #     conn.commit()
+                # except Exception as e:
+                #     print(e)
+                # finally:
+                #     cursor.close()
+                #     conn.close()
 
-                try:
-                    db = getMysqlConnection()
-                    conn = db['conn']
-                    cursor = db['cursor']
-                    query = "SELECT id FROM users ORDER BY id DESC LIMIT 1;"
-                    cursor.execute(query)
-                    response = cursor.fetchone()
-                except Exception as e:
-                    print(e)
-                finally:
-                    cursor.close()
-                    conn.close()
+                # try:
+                #     db = getMysqlConnection()
+                #     conn = db['conn']
+                #     cursor = db['cursor']
+                #     query = "SELECT id FROM users ORDER BY id DESC LIMIT 1;"
+                #     cursor.execute(query)
+                #     response = cursor.fetchone()
+                # except Exception as e:
+                #     print(e)
+                # finally:
+                #     cursor.close()
+                #     conn.close()
 
-                for lastID in response:
-                    user_id = lastID
+                # for lastID in response:
+                #     user_id = lastID
 
                 # according to blockchian:
-                user_id = len(get_user_details_blockchain()) - 1
+                user_id = len(get_user_details_blockchain())
                 flash(u'Successfully created new user.', 'success')
-                return redirect(url_for('show_user', user_id = user_id))
+                return redirect(url_for('home'))
             else:
                 flash(u'Mining of the block dint complete successfully.', 'error')
                 return render_template('create_user.html')
@@ -393,14 +441,22 @@ def login():
     next = request.values.get('next', '')
     if request.method == 'POST':
         try:
+            user_flag=False
             user_details = get_user_details_blockchain()
+            if not user_details:
+                flash(u'User doesnt exist.', 'error')
+                return render_template('login.html')
             for user in user_details:
                 if user:
                     if user['username'] == str(request.form['username']):
                         username = user['username']
                         password = user['password']
                         account_type = user['account_type']
+                        user_flag= True
                         break
+                else:
+                    flash(u'User doesnt exist.', 'error')
+                    return render_template('login.html')            
         except Exception as e:
             print(e)
             flash(u'Password or Username is incorrect.', 'error')
@@ -426,24 +482,29 @@ def login():
         # finally:
         #     cursor.close()
         #     conn.close()
-
-        if not pbkdf2_sha256.verify(request.form['password'], password):
-            flash(u'Password or Username is incorrect.', 'error')
-            return render_template('login.html')
+        if user_flag:
+            if not pbkdf2_sha256.verify(request.form['password'], password):
+                flash(u'Password or Username is incorrect.', 'error')
+                return render_template('login.html')
+            else:
+                login_user(username, account_type)
+                flash(u'You have been successfully logged in.', 'success')
+                return redirect(next or url_for('home'))
         else:
-            login_user(username, account_type)
-            flash(u'You have been successfully logged in.', 'success')
-            return redirect(next or url_for('home'))
-
+            flash(u'User doesnt exist.', 'error')
+            return render_template('login.html')
     return render_template('login.html')
 
 
 @app.route('/logout')
 def logout():
     flask_login.logout_user()
-    session.pop('username')
-    session.pop('logged_in')
-    session.pop('account_type')
+    if 'username' in session:
+        session.pop('username')
+    if 'logged_in' in session:
+        session.pop('logged_in')
+    if 'account_type' in session:
+        session.pop('account_type')
     flash(u'You have been successfully logged out.', 'info')
     return redirect(url_for('home'))
 
@@ -536,32 +597,35 @@ def show_user(user_id):
 
 def check_applied(username):
     # TODO
-    return True
+    return False
 
 
 def check_selected(username):
     # TODO
-    return True
+    return False
 
 
 @app.route('/job/<job_id>')
 def show_job(job_id):
     response = get_job_details_blockchain(str(job_id))
     if response and isinstance(response, list):
-        job = response[0]
+        job = deepcopy(response[0])
     else:
-        job = response
+        job = deepcopy(response)
 
     applied = False
     selected = False
     if job:
         if flask_login.current_user.is_authenticated:
             allow_apply = not flask_login.current_user.id == job['createdby']
-            allow_apply = allow_apply and not check_applications(
+            allow_apply = allow_apply and not check_applications(job_id,
                 flask_login.current_user.id)
+            print("allow_apply",allow_apply)
             applied = check_applied(flask_login.current_user.id)
+            print("applied",applied,allow_apply)
             if applied:
                 selected = check_selected(flask_login.current_user.id)
+            print("selected",selected)
         else:
             allow_apply = False
 
@@ -589,14 +653,14 @@ def show_job(job_id):
 def apply(job_id):
     response = get_job_details_blockchain(str(job_id))
     if response and isinstance(response, list):
-        job = response[0]
+        job = deepcopy(response[0])
     else:
-        job = response
+        job = deepcopy(response)
 
     if job:
         if flask_login.current_user.is_authenticated:
             allow_apply = not flask_login.current_user.id == job['createdby']
-            allow_apply = allow_apply and not check_applications(
+            allow_apply = allow_apply and not check_applications(job_id,
                 flask_login.current_user.id)
         else:
             allow_apply = False
@@ -621,25 +685,50 @@ def apply(job_id):
     if request.method == 'GET':
         return render_template('apply.html', job = job)
 
-    try:
-        db = getMysqlConnection()
-        username = session['username']
-        desc = request.form.get('desc')
-        conn = db['conn']
-        cursor = db['cursor']
-        query = "INSERT INTO applications " \
-                "(jobid, username, description) " \
-                "VALUES (\"%s\", \"%s\", \"%s\");" % (job_id, username, desc)
+    # Block chain initailization
+    transaction_data = {}
+    application_form_data = {
+        'id': len(get_application_details_blockchain())+1,
+        'job_id': str(job_id),
+        'username': str(session['username']),
+        'description': str(request.form.get('desc')),
+        'dateofcreation': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        }
+    transaction_data['application'] = application_form_data
+    transaction_data['job'] = deepcopy(get_job_details_blockchain(str(job_id))[0])
+    transaction_data['user'] = deepcopy(get_user_details_blockchain(username=session['username'])[0])
+    index = blockchain.create_new_transaction(transaction_data)
+    print("index", index)
+    # NOTE: Can be used later
+    response = {
+        'message': 'User Account has been successfully created',
+        'block_index': index
+        }
 
-        result = cursor.execute(query)
-        conn.commit()
+    # Prompt message to user can be given to confirm the mine of blockchain.
+    if index:
+        result = mine(uuid4().hex)
 
-    except Exception as e:
-        print(e)
-    finally:
-        cursor.close()
-        conn.close()
+    if result.get('status', False):
+        print("applications mined!")
+        # try:
+        #     db = getMysqlConnection()
+        #     username = session['username']
+        #     desc = request.form.get('desc')
+        #     conn = db['conn']
+        #     cursor = db['cursor']
+        #     query = "INSERT INTO applications " \
+        #             "(jobid, username, description) " \
+        #             "VALUES (\"%s\", \"%s\", \"%s\");" % (job_id, username, desc)
 
+        #     result = cursor.execute(query)
+        #     conn.commit()
+
+        # except Exception as e:
+        #     print(e)
+        # finally:
+        #     cursor.close()
+        #     conn.close()
     return flask.redirect(flask.url_for('home'))
 
 
@@ -672,35 +761,39 @@ def show_all_users():
 @app.route('/jobs_applied')
 @flask_login.login_required
 def jobs_applied():
-    jobs = list()
-    try:
-        user = str(flask_login.current_user.id)
-        db = getMysqlConnection()
-        conn = db['conn']
-        cursor = db['cursor']
-        query = "SELECT DISTINCT jobid FROM applications WHERE username LIKE '%%%s%%';" % user
-        cursor.execute(query)
-        response = cursor.fetchall()
-        jobs = list()
-        for item in response:
-            query = "SELECT * FROM jobs WHERE id=%s;" % str(item[0])
-            result = cursor.execute(query)
-            response = cursor.fetchone()
-            job = generatejob(response)
-            jobs.append(job)
+    application = get_application_details_blockchain(username =str(flask_login.current_user.id))
+    jobs=[]
+    for each_application in application:
+        jobs.append(get_job_details_blockchain(job_id=str(each_application['job_id']))[0])
+    print("jobs", jobs)
+    # try:
+    #     user = str(flask_login.current_user.id)
+    #     db = getMysqlConnection()
+    #     conn = db['conn']
+    #     cursor = db['cursor']
+    #     query = "SELECT DISTINCT jobid FROM applications WHERE username LIKE '%%%s%%';" % user
+    #     cursor.execute(query)
+    #     response = cursor.fetchall()
+    #     jobs = list()
+    #     for item in response:
+    #         query = "SELECT * FROM jobs WHERE id=%s;" % str(item[0])
+    #         result = cursor.execute(query)
+    #         response = cursor.fetchone()
+    #         job = generatejob(response)
+    #         jobs.append(job)
 
-    except Exception as e:
-        print(e)
-    finally:
-        cursor.close()
-        conn.close()
+    # except Exception as e:
+    #     print(e)
+    # finally:
+    #     cursor.close()
+    #     conn.close()
     return render_template('list_applications_by_user.html', jobs = jobs)
 
 
 @app.route('/company')
 @flask_login.login_required
 def list_jobs():
-    jobs = get_job_details_blockchain()
+    jobs = get_job_details_blockchain(username =str(flask_login.current_user.id))
     print("jobs", jobs)
     # try:
     #     db = getMysqlConnection()
@@ -730,35 +823,47 @@ def selection_possible(job_id):
 @app.route('/list_applications/<job_id>')
 @flask_login.login_required
 def list_applications(job_id):
-    jobs = list()
-    try:
-        db = getMysqlConnection()
-        conn = db['conn']
-        cursor = db['cursor']
-        query = "SELECT * FROM applications WHERE jobid = %s;" % str(job_id)
-        cursor.execute(query)
-        response = cursor.fetchall()
-        jobs = list()
-        for item in response:
-            job = dict()
-            job['id'] = item[0]
-            job['jobid'] = item[1]
-            job['username'] = item[2]
-            job['desc'] = item[3]
-            job['dateofcreation'] = item[4]
-            query = "SELECT * FROM users WHERE username='%s';" % str(item[2])
-            result = cursor.execute(query)
-            response = cursor.fetchone()
-            job['user'] = getuser(response)
-            job['user']['selected'] = check_selected(job['user']['username'])
-            job['selection_possible'] = selection_possible(job['id'])
-            print(job)
-            jobs.append(job)
-    except Exception as e:
-        print(e)
-    finally:
-        cursor.close()
-        conn.close()
+    application = get_application_details_blockchain(job_id =str(job_id))
+    print("application", application)
+    jobs=[]
+    for each_application in application:
+        job= deepcopy(each_application)
+        print(job)
+        job['user']= deepcopy(get_user_details_blockchain(username=str(job['username']))[0])
+        if get_job_status(str(job['user']['username'])):
+            job['user']['selected']= True
+        else:
+            job['user']['selected']= False
+        jobs.append(job)
+    # jobs = list()
+    # try:
+    #     db = getMysqlConnection()
+    #     conn = db['conn']
+    #     cursor = db['cursor']
+    #     query = "SELECT * FROM applications WHERE jobid = %s;" % str(job_id)
+    #     cursor.execute(query)
+    #     response = cursor.fetchall()
+    #     jobs = list()
+    #     for item in response:
+    #         job = dict()
+    #         job['id'] = item[0]
+    #         job['jobid'] = item[1]
+    #         job['username'] = item[2]
+    #         job['desc'] = item[3]
+    #         job['dateofcreation'] = item[4]
+    #         query = "SELECT * FROM users WHERE username='%s';" % str(item[2])
+    #         result = cursor.execute(query)
+    #         response = cursor.fetchone()
+    #         job['user'] = getuser(response)
+    #         job['user']['selected'] = check_selected(job['user']['username'])
+    #         job['selection_possible'] = selection_possible(job['id'])
+    #         print(job)
+    #         jobs.append(job)
+    # except Exception as e:
+    #     print(e)
+    # finally:
+    #     cursor.close()
+    #     conn.close()
     return render_template('list_applications_for_job.html', jobs = jobs)
 
 
@@ -769,11 +874,37 @@ def mark_completed(job_id):
     pass
 
 
-@app.route('/mark_selected/<user_id>')
+@app.route('/mark_selected/<application_id>')
 @flask_login.login_required
-def mark_selected(user_id):
-    # TODO
-    pass
+def mark_selected(application_id):
+    # Block chain initailization
+    application = get_application_details_blockchain(app_id=application_id)
+    transaction_data = {}
+    job_status = {
+        'id': len(get_job_status())+1,
+        'job_id': str(application['job_id']),
+        'username': str(application['username']),
+        'application_id': str(application_id),
+        'date_of_selection': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        }
+    transaction_data['job_status'] = job_status
+    index = blockchain.create_new_transaction(transaction_data)
+    print("index", index)
+    # NOTE: Can be used later
+    response = {
+        'message': 'User Account has been successfully created',
+        'block_index': index
+        }
+
+    # Prompt message to user can be given to confirm the mine of blockchain.
+    if index:
+        result = mine(uuid4().hex)
+
+    if result.get('status', False):
+        print("applications mined!")
+ 
+    return redirect(url_for(list_applications, job_id=job_id))
+
 
 
 @app.errorhandler(404)
@@ -799,6 +930,7 @@ def check_db():
                 "first_name varchar(50), " \
                 "last_name varchar(50), " \
                 "passhash varchar(500), " \
+                "account_type varchar(500), " \
                 "created DATETIME DEFAULT CURRENT_TIMESTAMP, " \
                 "KEY(id),PRIMARY KEY(username));"
         cursor.execute(query)
@@ -853,6 +985,7 @@ def check_db():
                     "jobid int(11) NOT NULL," \
                     "username varchar(45) NOT NULL," \
                     "description varchar(255)," \
+                    "selected varchar(255) DEFAULT 'processing'`," \
                     "dateofcreation DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," \
                     "CONSTRAINT fk_key_2 FOREIGN KEY (jobid) " \
                     "REFERENCES jobs (id) ON DELETE CASCADE ON UPDATE CASCADE, " \
@@ -868,9 +1001,9 @@ def check_db():
 
 # Blocakchain API's
 # @app.route('/mine', methods=['GET'])
-def mine():
+def mine(user_address):
     print("node_address", node_address)
-    block = blockchain.mine_block(node_address)
+    block = blockchain.mine_block(user_address, node_address)
 
     response = {
         'status': True,

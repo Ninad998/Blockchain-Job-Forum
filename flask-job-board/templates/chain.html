@@ -2,20 +2,21 @@
 
 {% block main %}
 <div class="row">
+    <div class="col-md-3">
     {% for block in chain %}
-    <div class="col-md-4">
-        <div class="card" style="width: 18rem;">
-            <div class="card-body">
-                <h5 class="card-title mb"><b>Index:</b> {{block.index}}</h5>
-                <p class="card-text mt"><b>Body:</b> {{block.body}}</p>
-                <p class="card-text mt"><b>TimeStamp:</b> {{block.timestamp}}</p>
-                <p class="card-text mt"><b>Previous Hash</b> {{block.previous_hash}}</p>
-                <p class="card-text mt"><b>Hash</b> {{block.hash}}</p>
-            </div>
-        </div>
-    </div>
+      <div class="card" style="width: 20rem;">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item"><h5><b>BLOCK: #</b>{{block.index}}</h5></li>
+            <li class="list-group-item"><b>Nonce:</b> {{block.nonce}}</li>
+            <li class="list-group-item"><b>Body:</b> {{block.body}}</li>
+            <li class="list-group-item"><b>TimeStamp:</b> {{block.timestamp}}</li>
+            <li class="list-group-item"><b>Previous Hash:</b> {{block.previous_hash}}</li>
+            <li class="list-group-item"><b>Hash:</b> {{block.hash}}</li>
+          </ul>
+      </div>
     {% endfor %}
+    </div>
 </div>
-</div>
+
 
 {% endblock %}

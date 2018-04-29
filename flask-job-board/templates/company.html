@@ -5,9 +5,9 @@
 <h3>Click to view all application for that job</h3>
 <table class="table">
     <tr>
-        <td>Job Name</td>
-        <td>Job Posting</td>
-        <td>Job Status</td>
+        <th class="w-25">Job Name</th>
+        <th class="w-50">Job Posting</td>
+        <th class="w-25">Job Status</td>
     </tr>
     {% for job in jobs %}
     <tr>
@@ -30,7 +30,7 @@
             </a>
             {% else %}
             <a href="/#" class="btn btn-secondary disabled">
-                No selected for this job
+                No one selected for this job
             </a>
             {% endif %}
         </td>

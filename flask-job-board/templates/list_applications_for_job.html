@@ -2,12 +2,12 @@
 
 {% block main %}
 {% if jobs|length > 0 %}
-<h1> Job Applications! </h1>
+<h3> Job Applications! </h3>
 <table class="table">
     <tr>
-        <td>Applicant's Full Name</td>
-        <td>About Applicant</td>
-        <td>Job Status</td>
+        <th class="w-25">Applicant's Full Name</td>
+        <th class="w-50">About Applicant</td>
+        <th class="w-25">Job Status</td>
     </tr>
     {% for job in jobs %}
     <tr>

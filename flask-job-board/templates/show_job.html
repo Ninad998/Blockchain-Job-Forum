@@ -27,30 +27,39 @@
     <tr><td></td><td></td></tr>
 </table>
 
-{% if applied %}
-
+{% if applied and session.account_type == 'user' %}
+{% if job.selection_possible %}
 {% if selected %}
 <a href="/mark_completed/{{ job.id }}" class="btn btn-secondary">
     Mark job completed
 </a>
 {% else %}
-<a href="/mark_completed/{{ job.id }}" class="btn btn-secondary disabled">
+<a href="/#" class="btn btn-secondary disabled">
     Not yet selected for the job
 </a>
 {% endif %}
-
+<!-- endif selected -->
 {% else %}
-
+<a href="/#" class="btn btn-secondary disabled">
+    Someone else selected for job
+</a>
+{% endif %}
+<!-- endif job.selection_possible -->
+{% elif not applied and session.account_type == 'user' %}
 {% if session.logged_in and job.allow_apply %}
 <a href="/apply/{{ job.id }}" class="btn btn-primary">
     Apply
 </a>
 {% else %}
-<a href="/create" class="btn btn-secondary">
-    CREATE NEW JOB
+<a href="/#" class="btn btn-primary disabled">
+    Apply
 </a>
 {% endif %}
-
+<!-- endif session.logged_in and job.allow_apply -->
+{% else %}
+<a href="/create" class="btn btn-secondary">
+    Create new job
+</a>
 {% endif %}
-
+<!-- endif applied|not applied and session.account_type == 'user' -->
 {% endblock %}

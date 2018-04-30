@@ -4,12 +4,12 @@ import hashlib
 
 class Block(object):
 
-    def __init__(self, index, proof, previous_hash, body, timestamp=None):
+    def __init__(self, index, proof, previous_hash, body, creation=None):
         self.index = index
         self.proof = proof
         self.previous_hash = previous_hash
         self.body = body
-        self.timestamp = timestamp or time.time()
+        self.creation = creation or time.time()
         self.nonce, self.hash = self.compute_hash_with_proof_of_work()
 
     # Compute hash based upon the nonce value
@@ -23,11 +23,11 @@ class Block(object):
             nonce += 1             ## keep trying (and trying and trying)
 
     def get_block_hash(self, nonce=0):
-        block_string = "{}{}{}{}{}{}".format(str(nonce), self.index, self.proof, self.previous_hash, self.body, self.timestamp)
+        block_string = "{}{}{}{}{}{}".format(str(nonce), self.index, self.proof, self.previous_hash, self.body, self.creation)
         return hashlib.sha256(block_string.encode()).hexdigest()
 
     def __repr__(self):
-        return "{} - {} - {} - {} - {} - {} - {}".format(self.index, self.proof, self.previous_hash, self.body, self.timestamp, self.nonce, self.hash)
+        return "{} - {} - {} - {} - {} - {} - {}".format(self.index, self.proof, self.previous_hash, self.body, self.creation, self.nonce, self.hash)
 
 
 class BlockChain(object):
@@ -71,7 +71,7 @@ class BlockChain(object):
         elif not BlockChain.is_valid_proof(block.proof, previous_block.proof):
             return False
 
-        elif block.timestamp <= previous_block.timestamp:
+        elif block.creation <= previous_block.creation:
             return False
 
         return True
@@ -163,5 +163,5 @@ class BlockChain(object):
             block_data['proof'],
             block_data['previous_hash'],
             block_data['body'],
-            timestamp=block_data['timestamp']
+            creation=block_data['creation']
         )

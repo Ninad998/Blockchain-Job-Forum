@@ -1,45 +1,43 @@
 {% extends "base.html" %}
 
 {% block main %}
-<div class="container-fluid" style="margin-left: -10em">
-    <div class="row flex-row flex-nowrap">
-        {% for block in chain %}
-        <div class="col-md-4">
-            <div class="card">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><h5><b>Block: #</b>{{ block.index }}</h5></li>
-                    <li class="list-group-item"><b>Nonce:</b> {{ block.nonce }}</li>
-                    <li class="list-group-item" style="height: 290px; overflow-y: scroll;"><b>Body:</b>
-                        {% if block.body %}
-                        <ul class="list-group list-group-flush">
-                            {% if block.body[0].user %}
-                            <li class="list-group-item"><b>User:</b> {{ block.body[0].user }}</li>
-                            {% endif %}
-                            {% if block.body[0].job %}
-                            <li class="list-group-item"><b>Job:</b> {{ block.body[0].job }}</li>
-                            {% endif %}
-                            {% if block.body[0].application %}
-                            <li class="list-group-item"><b>Application:</b> {{ block.body[0].application }}</li>
-                            {% endif %}
-                            {% if block.body[0].transaction %}
-                            <li class="list-group-item"><b>Transaction:</b> {{ block.body[0].transaction }}</li>
-                            {% endif %}
-                            {% if block.body[0].message %}
-                            <li class="list-group-item"><b>Message:</b> {{ block.body[0].message }}</li>
-                            {% endif %}
-                        </ul>
-                        {% else %}
-                        No data inserted
+<div class="row" style="overflow-x: scroll;">
+    {% for block in chain %}
+    <div class="col-md-4">
+        <div class="card">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><h5><b>Block: #</b>{{ block.index }}</h5></li>
+                <li class="list-group-item"><b>Nonce:</b> {{ block.nonce }}</li>
+                <li class="list-group-item" style="height: 250px; overflow-y: scroll;"><b>Body:</b>
+                    {% if block.body %}
+                    <ul class="list-group list-group-flush">
+                        {% if block.body[0].user %}
+                        <li class="list-group-item"><b>User:</b> {{ block.body[0].user }}</li>
                         {% endif %}
-                    </li>
-                    <li class="list-group-item"><b>TimeStamp:</b> {{ block.timestamp }}</li>
-                    <li class="list-group-item"><b>Previous Hash:</b> {{ block.previous_hash }}</li>
-                    <li class="list-group-item"><b>Hash:</b> {{ block.hash }}</li>
-                </ul>
-            </div>
+                        {% if block.body[0].job %}
+                        <li class="list-group-item"><b>Job:</b> {{ block.body[0].job }}</li>
+                        {% endif %}
+                        {% if block.body[0].application %}
+                        <li class="list-group-item"><b>Application:</b> {{ block.body[0].application }}</li>
+                        {% endif %}
+                        {% if block.body[0].transaction %}
+                        <li class="list-group-item"><b>Transaction:</b> {{ block.body[0].transaction }}</li>
+                        {% endif %}
+                        {% if block.body[0].message %}
+                        <li class="list-group-item"><b>Message:</b> {{ block.body[0].message }}</li>
+                        {% endif %}
+                    </ul>
+                    {% else %}
+                    No data inserted
+                    {% endif %}
+                </li>
+                <li class="list-group-item"><b>TimeStamp:</b> {{ block.timestamp }}</li>
+                <li class="list-group-item"><b>Previous Hash:</b> {{ block.previous_hash }}</li>
+                <li class="list-group-item"><b>Hash:</b> {{ block.hash }}</li>
+            </ul>
         </div>
-        {% endfor %}
     </div>
+    {% endfor %}
 </div>
 
 {% endblock %}

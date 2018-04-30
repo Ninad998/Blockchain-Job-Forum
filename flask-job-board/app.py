@@ -110,7 +110,7 @@ def timesince(dt, default = "just now"):
 
 def login_user(username, account_type):
     user = User()
-    user.id = str(request.form['username'])
+    user.id = username
     flask_login.login_user(user)
     session['username'] = flask_login.current_user.id
     session['logged_in'] = True
@@ -791,10 +791,10 @@ def signup():
 def login():
     next = request.values.get('next', '')
     if request.method == 'POST':
+        user_flag = False
         try:
-            user_flag = False
             user_details = get_user_details_blockchain(username=str(request.form['username']))
-            if isinstance(user_details,int):
+            if isinstance(user_details, int):
                 flash(u'User doesnt exist.', 'error')
                 return render_template('login.html')
             else:

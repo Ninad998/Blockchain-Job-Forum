@@ -40,21 +40,25 @@
     </div>
 
     <div class="form-group row">
-        <label class="col-sm-2 col-form-label" for='payment'>Payment Amount(in zether):</label>
+        <div class="col-sm-2">
+            <label class="col-form-label" for='payment'>Payment Amount:</label>
+            <small class="form-text text-muted">In Zether (Ž)</small>
+        </div>
         <div class="col-md-6">
             <input class="form-control" id='payment' name='payment' type='number' required>
         </div>
     </div>
 
     <div class="form-group row">
-        <label class="col-sm-2 col-form-label" for='job_posting'>Job Posting:</label>
+        <div class="col-sm-2">
+            <label class="col-form-label" for='job_posting'>Job Posting:</label>
+            <small class="form-text text-muted">Paste in your job description.</small>
+        </div>
+
         <div class="col-md-6">
             <textarea class="form-control" class="xxlarge" id="job_posting"
                       name="job_posting" rows="10" maxlength="255"></textarea>
             <br/>
-            <span class="help-block">
-                Paste in your job description.
-            </span>
         </div>
     </div>
     <br/>

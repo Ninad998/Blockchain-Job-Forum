@@ -593,7 +593,7 @@ def get_chain_list_db(index = ''):
         response = cursor.fetchall()
         for row in response:
             block = {
-                'index': row[0],
+                'id': row[0],
                 'proof': row[1],
                 'prev_hash': row[2],
                 'body': row[3],
@@ -619,7 +619,7 @@ def insert_block_db(block):
         conn = db['conn']
         cursor = db['cursor']
         query = "INSERT INTO chain " \
-                "(index, proof, prev_hash, body, creation, nonce, hash) " \
+                "(id, proof, prev_hash, body, creation, nonce, hash) " \
                 "VALUES %r;" % tuple(block)
         cursor.execute(query)
         conn.commit()
@@ -1510,14 +1510,14 @@ def check_db():
         conn = db['conn']
         cursor = db['cursor']
         query = "CREATE TABLE chain (" \
-                "index varchar(50) NOT NULL, " \
+                "id varchar(50) NOT NULL, " \
                 "proof varchar(50) NOT NULL, " \
                 "prev_hash varchar(100) NOT NULL, " \
                 "body varchar(500) NOT NULL, " \
                 "creation DATETIME NOT NULL, " \
                 "nonce int NOT NULL, " \
                 "hash varchar(100) NOT NULL, " \
-                "PRIMARY KEY (index));"
+                "PRIMARY KEY (id));"
         cursor.execute(query)
         conn.commit()
     finally:

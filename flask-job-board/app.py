@@ -1284,13 +1284,13 @@ def check_db():
         conn = db['conn']
         cursor = db['cursor']
         query = "CREATE TABLE jobs (" \
-                "id int NOT NULL," \
-                "company_name varchar(255)," \
-                "company_location varchar(255)," \
-                "company_url varchar(255)," \
-                "job_title varchar(255)," \
-                "job_posting varchar(255)," \
-                "application_instructions varchar(1000)," \
+                "id int NOT NULL, " \
+                "company_name varchar(255), " \
+                "company_location varchar(255), " \
+                "company_url varchar(255), " \
+                "job_title varchar(255), " \
+                "job_posting varchar(255), " \
+                "application_instructions varchar(1000), " \
                 "created DATETIME, " \
                 "createdby varchar(50), " \
                 "status varchar(50), " \
@@ -1318,17 +1318,16 @@ def check_db():
             conn = db['conn']
             cursor = db['cursor']
             query = "CREATE TABLE applications (" \
-                    "id int NOT NULL AUTO_INCREMENT," \
-                    "jobid int(11) NOT NULL," \
-                    "username varchar(45) NOT NULL," \
-                    "description varchar(255)," \
-                    "selected varchar(255) DEFAULT 'processing'`," \
-                    "dateofcreation DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," \
-                    "CONSTRAINT fk_key_2 FOREIGN KEY (jobid) " \
+                    "id int, " \
+                    "job_id int(11) NOT NULL, " \
+                    "username varchar(45) NOT NULL, " \
+                    "description varchar(255), " \
+                    "dateofcreation DATETIME, " \
+                    "CONSTRAINT fk_key_3 FOREIGN KEY (job_id) " \
                     "REFERENCES jobs (id) ON DELETE CASCADE ON UPDATE CASCADE, " \
-                    "CONSTRAINT fk_key_3 FOREIGN KEY (username) " \
+                    "CONSTRAINT fk_key_4 FOREIGN KEY (username) " \
                     "REFERENCES users (username) ON DELETE CASCADE ON UPDATE CASCADE, " \
-                    "KEY(id), PRIMARY KEY (jobid, username));"
+                    "KEY(id), PRIMARY KEY (job_id, username));"
             cursor.execute(query)
             conn.commit()
         finally:

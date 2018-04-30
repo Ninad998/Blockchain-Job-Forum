@@ -2,13 +2,15 @@
 
 {% block main %}
 <h1>Welcome to Drive Freelance.</h1>
-<p>This website is suppose to show a proof-of-concept Freelance job board application using BLOCKCHAIN.</p>
+<p>This website is suppose to show a proof-of-concept Freelance job board application using Blockchain.</p>
 {% if session.account_type == 'company' %}
 <p>Feel free to test the job creation process by <a href='/create'>clicking here</a>.</p>
 {% endif %}
+{% if jobs|length > 0 %}
 <h1> Job Offerings! </h1>
 {% for job in jobs %}
 Created {{ job.created|timesince }}. <a href="/job/{{ job.id }}">{{ job.company_name }} - {{ job.job_title }}</a>
 <br/>
 {% endfor %}
+{% endif %}
 {% endblock %}

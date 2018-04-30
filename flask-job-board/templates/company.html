@@ -7,17 +7,21 @@
     <tr>
         <th class="w-25">Job Name</th>
         <th class="w-50">Job Posting</td>
-        <th class="w-25">Job Status</td>
+        <th class="w-10">Applications</td>
+        <th class="w-15">Job Status</td>
     </tr>
     {% for job in jobs %}
     <tr>
         <td>
-            <a href="/list_applications/{{ job.id }}">{{ job.job_title }} </a>
+            <a href="/job/{{ job.id }}">{{ job.job_title }} </a>
         </td>
         <td>
             <p>
                 {{ job.job_posting }}
             </p>
+        </td>
+        <td>
+            <a href="/list_applications/{{ job.id }}">View Applications </a>
         </td>
         <td>
             {% if job.status == 'assigned' %}

@@ -522,11 +522,11 @@ def get_application_list_db(job_id = '', username = ''):
         response = cursor.fetchall()
         for row in response:
             application = {
-                'id': response[0],
-                'job_id': response[1],
-                'username': response[2],
-                'description': response[3],
-                'dateofcreation': response[4],
+                'id': row[0],
+                'job_id': row[1],
+                'username': row[2],
+                'description': row[3],
+                'dateofcreation': row[4],
                 }
             applications.append(application)
 
@@ -568,6 +568,58 @@ def update_application_db(application):
                 "WHERE id=%s;" % (application['job_id'], application['username'],
                                   application['description'], application['dateofcreation'],
                                   application['id'])
+        cursor.execute(query)
+        conn.commit()
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def get_chain_list_db(index = ''):
+    global cursor, conn
+    chain = list()
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        if index:
+            query = "SELECT * FROM chain WHERE index = %s;" % index
+        else:
+            query = "SELECT * FROM chain;"
+        cursor.execute(query)
+        response = cursor.fetchall()
+        for row in response:
+            block = {
+                'index': row[0],
+                'proof': row[1],
+                'prev_hash': row[2],
+                'body': row[3],
+                'creation': row[4],
+                'nonce': row[5],
+                'hash': row[6],
+                }
+            chain.append(block)
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+    return chain
+
+
+def insert_block_db(block):
+    global cursor, conn
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "INSERT INTO chain " \
+                "(index, proof, prev_hash, body, creation, nonce, hash) " \
+                "VALUES %r;" % tuple(block)
         cursor.execute(query)
         conn.commit()
     except Exception as e:
@@ -1404,6 +1456,7 @@ def check_db():
                 "createdby varchar(50), " \
                 "status varchar(50), " \
                 "username varchar(50), " \
+                "payment int, " \
                 "CONSTRAINT fk_key_1 FOREIGN KEY (createdby) " \
                 "REFERENCES users (username) ON DELETE CASCADE ON UPDATE CASCADE, " \
                 "CONSTRAINT fk_key_2 FOREIGN KEY (username) " \
@@ -1415,33 +1468,59 @@ def check_db():
         cursor.close()
         conn.close()
 
-        try:
-            db = getMysqlConnection()
-            conn = db['conn']
-            cursor = db['cursor']
-            query = "SELECT * FROM applications LIMIT 1;"
-            cursor.execute(query)
-        except Exception as e:
-            print(e)
-            db = getMysqlConnection()
-            conn = db['conn']
-            cursor = db['cursor']
-            query = "CREATE TABLE applications (" \
-                    "id int, " \
-                    "job_id int(11) NOT NULL, " \
-                    "username varchar(45) NOT NULL, " \
-                    "description varchar(255), " \
-                    "dateofcreation DATETIME, " \
-                    "CONSTRAINT fk_key_3 FOREIGN KEY (job_id) " \
-                    "REFERENCES jobs (id) ON DELETE CASCADE ON UPDATE CASCADE, " \
-                    "CONSTRAINT fk_key_4 FOREIGN KEY (username) " \
-                    "REFERENCES users (username) ON DELETE CASCADE ON UPDATE CASCADE, " \
-                    "KEY(id), PRIMARY KEY (job_id, username));"
-            cursor.execute(query)
-            conn.commit()
-        finally:
-            cursor.close()
-            conn.close()
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "SELECT * FROM applications LIMIT 1;"
+        cursor.execute(query)
+    except Exception as e:
+        print(e)
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "CREATE TABLE applications (" \
+                "id int NOT NULL, " \
+                "job_id int(11) NOT NULL, " \
+                "username varchar(45) NOT NULL, " \
+                "description varchar(255), " \
+                "dateofcreation DATETIME, " \
+                "CONSTRAINT fk_key_3 FOREIGN KEY (job_id) " \
+                "REFERENCES jobs (id) ON DELETE CASCADE ON UPDATE CASCADE, " \
+                "CONSTRAINT fk_key_4 FOREIGN KEY (username) " \
+                "REFERENCES users (username) ON DELETE CASCADE ON UPDATE CASCADE, " \
+                "KEY(id), PRIMARY KEY (job_id, username));"
+        cursor.execute(query)
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "SELECT * FROM chain LIMIT 1;"
+        cursor.execute(query)
+    except Exception as e:
+        print(e)
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "CREATE TABLE chain (" \
+                "index varchar(50) NOT NULL, " \
+                "proof varchar(50) NOT NULL, " \
+                "prev_hash varchar(100) NOT NULL, " \
+                "body varchar(500) NOT NULL, " \
+                "creation DATETIME NOT NULL, " \
+                "nonce int NOT NULL, " \
+                "hash varchar(100) NOT NULL, " \
+                "PRIMARY KEY (index));"
+        cursor.execute(query)
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
 
 
 # Blocakchain API's

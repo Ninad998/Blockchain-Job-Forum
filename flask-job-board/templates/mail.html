@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div>
+<form method="post" action="/send_mail">
+  <div class="form-group">
+    <div class="form-row">
+        <div class="col-md-6">            
+            <label for="from_msg">From: </label>
+            <input type="text" class="form-control" id="from_msg" name="from_msg" value={{ user.username }}>
+        </div>
+        <div class="col-md-6">            
+            <label for="to_msg">To: </label>
+            <select class="form-control" id="to_msg" name="to_msg">
+                {% if mail_contacts %}
+                  {% for contact in mail_contacts %}
+                  <option value={{contact}}>{{contact}}</option>
+                  {% endfor %}
+                {% else %}
+                <option>No Contacts</option>
+                {% endif %}
+            </select>
+        </div>
+    </div>
+    </div>
+  <div class="form-group">
+    <label for="msg"> Messgae: </label>
+    <textarea class="form-control" id="msg" name="msg" rows="3"></textarea>
+  </div>
+    <div class="form-group row">
+        <button type="submit" class="btn btn-primary" style="margin-left: 2em">Send Message</button>
+        <button type="reset" class="btn btn-secondary-outline" style="margin-left: 2em">Cancel</button>
+    </div>
+</form>    
+</div>
+<hr>
+<div>
+{% if mails %}
+<h3> Messages! </h3>
+<table class="table">
+    <tr>
+        <th class="w-25">Sender</td>
+        <th class="w-25">Date</td>
+        <th class="w-50">Message</td>
+    </tr>
+    {% for mail in mails %}
+    <tr>
+        <td>
+            <p>
+                {{ mail.sender }}
+            </p>
+        </td>
+        <td>
+            <p>
+                {{ mail.date }}
+            </p>
+        </td>
+        <td>
+            <p>
+                {{ mail.message }}
+            </p>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<h3>No Messages yet!</h3>
+{% endif %}   
+
+
+</div>
+{% endblock %}

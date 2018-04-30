@@ -71,13 +71,12 @@ def getUserList():
 
 
 @login_manager.user_loader
-def user_loader(email):
-    users = getUserList()
-    if not email or email not in str(users):
-        return
-    user = User()
-    user.id = email
-    return user
+def user_loader(username):
+    if get_user_details_blockchain(username = username):
+        user = User()
+        user.id = username
+        return user
+    return
 
 
 @app.template_filter()
@@ -123,7 +122,7 @@ def check_applications(job_id, username):
     if isinstance(jobs,dict) and len(jobs) > 0:
         ret = True
     # try:
-    #     user = str(flask_login.current_user.id)
+    #     user = flask_login.current_user.id
     #     db = getMysqlConnection()
     #     conn = db['conn']
     #     cursor = db['cursor']
@@ -315,7 +314,7 @@ def get_job_details_db(job_id = ''):
     return job
 
 
-def get_job_list(username = ''):
+def get_job_list(username = '',user=''):
     # check for changes:
     try:
         consensus()
@@ -332,6 +331,10 @@ def get_job_list(username = ''):
                     if username:
                         if each_block['body'][0]['job']['createdby'] == username:
                             blockchain_job_list.append(each_block['body'][0].get('job'))
+                    elif user:
+                        if 'username' in each_block['body'][0]['job'] and each_block['body'][0]['job']['username'] == user:
+                            blockchain_job_list.append(each_block['body'][0].get('job'))
+                    
                     else:
                         blockchain_job_list.append(each_block['body'][0].get('job'))
     return blockchain_job_list
@@ -575,7 +578,7 @@ def update_application_db(application):
 
 
 def generatejob(response):
-    if flask_login.current_user.is_authenticated:
+    if session['username']:
         allow_apply = not flask_login.current_user.id == response[8]
         # allow_apply = allow_apply and not check_applications(
         #     flask_login.current_user.id)
@@ -623,6 +626,9 @@ def home():
     #             jobs.append(job)
     #     except Exception as e:
     #         print(e)
+    print(flask_login.current_user.is_authenticated)
+    if flask_login.current_user.is_authenticated:
+        print(flask_login.current_user.id)
     return render_template('home.html', jobs = jobs)
 
 
@@ -647,11 +653,12 @@ def create_job():
         joblist.append(str(request.form['job_title']))
         joblist.append(str(request.form['job_posting']))
         joblist.append(str(request.form['application_instructions']))
-        joblist.append(str(flask_login.current_user.id))
+        joblist.append(flask_login.current_user.id)
 
         # Block chain initailization
         transaction_data = {}
         job_form_data = {
+            'id': get_job_details_blockchain()+1,
             'company_name': str(request.form['company_name']),
             'company_location': str(request.form['company_location']),
             'company_url': company_ur,
@@ -660,8 +667,8 @@ def create_job():
             'application_instructions': str(request.form['application_instructions']),
             'createdby': flask_login.current_user.id,
             'created': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-            'id': get_job_details_blockchain()+1,
             'status':'not_selected',
+            'username': "NULL",
             'payment': str(request.form['payment'])
             }
         print("job_form_data", job_form_data)
@@ -915,10 +922,93 @@ def settings():
         user = getuser(response)
         return render_template('settings.html', user = user)
 
+def get_message_details(username=""):
+    # check for changes:
+    try:
+        consensus()
+    except Exception as e:
+        print(e) 
+    chain = blockchain.get_serialized_chain
+    count = 0
+    blockchain_msg_list=[]
+    for each_block in reversed(chain):
+        if each_block.get('body', []):
+            if each_block['body'][0].get('message'):
+                count += 1
+                if username:
+                    if each_block['body'][0]['message']['recipient'] == str(username):
+                        blockchain_msg_list.append(each_block['body'][0].get('message'))
+    if blockchain_msg_list:
+        return blockchain_msg_list
+    return count
+
+
+@app.route('/send_mail', methods = ['GET', 'POST'])
+def send_mail():
+    msg = { 'id': get_message_details() + 1,
+            'sender':str(request.form['from_msg']),
+            'recipient': str(request.form['to_msg']),
+            'date': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+            'message': str(request.form['msg'])}
+    transaction_data={'message':msg}
+    index = blockchain.create_new_transaction(transaction_data)
+    if index:
+        result = mine(uuid4().hex)
+    if result.get('status', False):
+        print("Information is Mined")
+    flash(u'Message successfully sent.', 'success')    
+    return redirect(url_for('home'))
+
+
+@app.route('/mail/<username>')
+def mail(username):
+    user = get_user_details_blockchain(username=str(username)) #dict
+    mail_contacts=[]
+    if user['account_type'] =='company':
+        jobs = get_job_list(username= str(username))   #list
+        for job in jobs:
+            if job['status'] != "not_selected":
+                mail_contacts.append(job['username'])
+
+        mails = get_message_details(str(username))
+        if not isinstance(mails,list):
+            mails = []
+
+    elif user['account_type'] =='user':
+        jobs = get_job_list(user= str(username))   #list
+        for job in jobs:
+            if job['status'] != "not_selected":
+                mail_contacts.append(job['createdby'])
+
+        mails = get_message_details(str(username))
+        if not isinstance(mails,list):
+            mails = []
+
+    else:
+        flash(u'Messaging is disabled.', 'success')    
+        return redirect(url_for('home'))
+
+    # try:
+    #     db = getMysqlConnection()
+    #     conn = db['conn']
+    #     cursor = db['cursor']
+    #     query = "SELECT * FROM users WHERE id=%s;" % str(user_id)
+    #     result = cursor.execute(query)
+    #     response = cursor.fetchone()
+    # except Exception as e:
+    #     print(e)
+    # finally:
+    #     cursor.close()
+    #     conn.close()
+    # user = getuser(response)
+
+    return render_template('mail.html', user = user,mail_contacts=mail_contacts, mails=mails)
+
+
 
 @app.route('/user/<user_id>')
 def show_user(user_id):
-    user = get_user_details_blockchain(str(user_id))
+    user = get_user_details_blockchain(user_id=str(user_id))
     # try:
     #     db = getMysqlConnection()
     #     conn = db['conn']
@@ -1037,7 +1127,7 @@ def apply(job_id):
     application_form_data = {
         'id': get_application_details_blockchain()+1,
         'job_id': str(job_id),
-        'username': str(session['username']),
+        'username': str(flask_login.current_user.id),
         'description': str(request.form.get('desc')),
         'dateofcreation': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         }
@@ -1050,7 +1140,7 @@ def apply(job_id):
         print("Information is Mined")
         # try:
         #     db = getMysqlConnection()
-        #     username = session['username']
+        #     username = flask_login.current_user.id
         #     desc = request.form.get('desc')
         #     conn = db['conn']
         #     cursor = db['cursor']
@@ -1170,6 +1260,10 @@ def list_applications(job_id):
                 job['user']['selected']= True
             else:
                 job['user']['selected'] = False
+        if job_details['status'] == "completed":
+            job['user']['completed'] = True
+        else:
+            job['user']['completed'] = False
         jobs.append(job)
     # jobs = list()
     # try:

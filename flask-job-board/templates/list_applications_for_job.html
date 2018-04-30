@@ -25,9 +25,13 @@
                 Select
             </a>
             {% else %}
-                {% if job.user.selected %}
-                <a href="/#" class="btn btn-secondary disabled">
+                {% if job.user.selected and not job.user.completed %}
+                <a href="/#" class="btn btn-primary disabled">
                     User selected, job not yet completed
+                </a>
+                {% elif job.user.selected and job.user.completed %}
+                <a href="/#" class="btn btn-success disabled">
+                    User selected, job completed
                 </a>
                 {% else %}
                 <a href="/#" class="btn btn-secondary disabled">

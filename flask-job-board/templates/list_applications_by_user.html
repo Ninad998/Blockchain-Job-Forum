@@ -28,6 +28,10 @@
             <a href="/#" class="btn btn-primary disabled">
                 Selected
             </a>
+            {% elif job.status == 'completed' and job.username == session.username %}
+            <a href="/#" class="btn btn-success disabled">
+                Job completed
+            </a>
             {% else %}
             <a href="/#" class="btn btn-secondary disabled">
                 Not selected

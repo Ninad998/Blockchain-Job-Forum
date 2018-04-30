@@ -9,7 +9,32 @@
           <ul class="list-group list-group-flush">
             <li class="list-group-item"><h5><b>BLOCK: #</b>{{block.index}}</h5></li>
             <li class="list-group-item"><b>Nonce:</b> {{block.nonce}}</li>
-            <li class="list-group-item"><b>Body:</b> {{block.body}}</li>
+            <li class="list-group-item" style="height: 250px;overflow-y: scroll;"><b>Body:</b>
+              {% if block.body %}
+                <ul class="list-group list-group-flush">
+                  {% if block.body[0].user %}
+                  <li><b>User:</b> {{block.body[0].user}}</li>
+                  {% endif %}
+                  {% if block.body.job %}
+                  <li><b>Job:</b> {{block.body.job}}</li>
+                  {% endif %}
+                  {% if block.body.application %}
+                  <li><b>Application:</b> {{block.body.application}}</li>
+                  {% endif %}
+                  {% if block.body.transaction %}
+                  <li><b>Transaction:</b> {{block.body.transaction}}</li>
+                  {% endif %}
+                  {% if block.body.message %}
+                  <li><b>Message:</b> {{block.body.message}}</li>
+                  {% endif %}
+                  {% if block.body.mine_transaction %}
+                  <li><b>Mining Fee:</b> {{block.body.mine_transaction}}</li>
+                  {% endif %}
+                </ul>
+              {% else %}
+                No data inserted
+              {% endif %}
+            </li>
             <li class="list-group-item"><b>TimeStamp:</b> {{block.timestamp}}</li>
             <li class="list-group-item"><b>Previous Hash:</b> {{block.previous_hash}}</li>
             <li class="list-group-item"><b>Hash:</b> {{block.hash}}</li>

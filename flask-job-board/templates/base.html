@@ -22,6 +22,9 @@
                     <a class="nav-link" href="/about">About</a>
                 </li>
                 {% if session.logged_in %}
+                <li class="nav-item">
+                    <a class="nav-link" href={{ url_for('mail', username=session.username ) }}>Mailing</a>
+                </li>
                 {% if session.account_type == 'user' %}
                 <li class="nav-item">
                     <a class="nav-link" href='/jobs_applied'>Jobs Applied</a>
@@ -67,6 +70,7 @@
     {% endwith %}
     <br/>
     <br/>
+    Ž Ž Ž
     {% block main %}
     {% endblock %}
 </div>

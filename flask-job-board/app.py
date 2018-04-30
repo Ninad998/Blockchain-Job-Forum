@@ -147,6 +147,13 @@ def get_user_details_blockchain(user_id = '', username = ''):
     except Exception as e:
         print(e)
     chain = blockchain.get_serialized_chain
+    # if len(chain) > app.config['BLOCKCHAIN_LENGTH']:
+    #     for i,each_block in enumerate(chain):
+    #         if each_block.get('body', []) and each_block['body'][0].get('user'):
+    #             user = deeepcopy(each_block['body'][0].get('user'))
+    #             insert_user_db([user['id'],user['username'], user['first_name'], user['last_name'], user['passhash'], user['account_type'], user['created']])
+    #             blockchain.remove_block_in_chain(each_block['index'])
+    # elif 
     count = 0
     for each_block in reversed(chain):
         if each_block.get('body', []):
@@ -212,7 +219,7 @@ def insert_user_db(user):
         cursor = db['cursor']
         query = "INSERT INTO users " \
                 "(id, username, first_name, last_name, passhash, account_type, created) " \
-                "VALUES %r;" % tuple(user)
+                "VALUES %r;" % (tuple(user),)
         cursor.execute(query)
         conn.commit()
     except Exception as e:
@@ -220,7 +227,7 @@ def insert_user_db(user):
     finally:
         cursor.close()
         conn.close()
-
+    return True
 
 
 def update_user_db(user):
@@ -250,7 +257,7 @@ def get_job_details_blockchain(job_id = ''):
     try:
         consensus()
     except Exception as e:
-        print(e)
+        print(e) 
     chain = blockchain.get_serialized_chain
     count = 0
     for each_block in reversed(chain):
@@ -654,7 +661,8 @@ def create_job():
             'createdby': flask_login.current_user.id,
             'created': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
             'id': get_job_details_blockchain()+1,
-            'status':'not_selected'
+            'status':'not_selected',
+            'payment': str(request.form['payment'])
             }
         print("job_form_data", job_form_data)
         transaction_data['job'] = job_form_data
@@ -937,11 +945,28 @@ def check_selected(username):
     # TODO
     return False
 
+def get_transaction_details(job_id=""):
+    # check for changes:
+    try:
+        consensus()
+    except Exception as e:
+        print(e) 
+    chain = blockchain.get_serialized_chain
+    count = 0
+    for each_block in reversed(chain):
+        if each_block.get('body', []):
+            if each_block['body'][0].get('transaction'):
+                count += 1
+                if job_id:
+                    if each_block['body'][0]['transaction']['job_id'] == int(job_id):
+                        return deepcopy(each_block['body'][0].get('transaction'))
+    return count
 
 @app.route('/job/<job_id>')
 def show_job(job_id):
     job = get_job_details_blockchain(str(job_id))
     applied = False
+    payment = False
     if job:
         if flask_login.current_user.is_authenticated:
             allow_apply = not flask_login.current_user.id == job['createdby']
@@ -954,6 +979,11 @@ def show_job(job_id):
 
         if check_applications(job_id,session.get('username')):
             applied = True
+
+        if job['status'] == "completed":
+            amt = get_transaction_details(str(job_id))
+            if amt:
+                payment = True
     # try:
     #     db = getMysqlConnection()
     #     conn = db['conn']
@@ -967,7 +997,7 @@ def show_job(job_id):
     #     cursor.close()
     #     conn.close()
     # job = generatejob(response)
-    return render_template('show_job.html', job = job, applied = applied)
+    return render_template('show_job.html', job = job, applied = applied, payment =payment)
 
 
 @app.route('/apply/<job_id>', methods = ['GET', 'POST'])
@@ -1171,6 +1201,25 @@ def list_applications(job_id):
     #     cursor.close()
     #     conn.close()
     return render_template('list_applications_for_job.html', jobs = jobs)
+
+@app.route('/make_payment/<job_id>')
+@flask_login.login_required
+def make_payment(job_id):
+    if session['account_type'] == 'company':
+        job = get_job_details_blockchain(str(job_id))
+        payment = { 'id': get_transaction_details() + 1,
+                    'job_id':job['id'],
+                    'sender':job['createdby'],
+                    'recipient': job['username'],
+                    'amount': job['payment'],
+                    'job_status': job['status']}
+        transaction_data={'transaction':payment}
+        index = blockchain.create_new_transaction(transaction_data)
+        if index:
+            result = mine(uuid4().hex)
+        if result.get('status', False):
+            print("Information is Mined")
+        return redirect(url_for('show_job', job_id = int(job_id)))
 
 
 @app.route('/mark_completed/<job_id>')

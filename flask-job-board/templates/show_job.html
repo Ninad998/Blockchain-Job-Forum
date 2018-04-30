@@ -25,6 +25,10 @@
         <td>{{ job.job_title }}</td>
     </tr>
     <tr>
+        <td>Payment Amount</td>
+        <td>{{ job.payment }}</td>
+    </tr>
+    <tr>
         <td>Application Instructions</td>
         <td>{{ job.application_instructions }}</td>
     </tr>
@@ -40,10 +44,19 @@
         <a href="/#" class="btn btn-secondary disabled">
             Not yet selected for the job
         </a>
-    {% elif job.status == "completed" %}
+    {% elif job.status == "completed" and job.username == session.username %}
         <a href="/#" class="btn btn-success disabled">
             Job completed
         </a>
+        {% if payment %}
+        <a href="/#" class="btn btn-success disabled">
+            Payment recieved
+        </a>
+        {% else %}
+        <a href="/#" class="btn btn-danger disabled">
+            Payment not recieved
+        </a>
+        {% endif %}
     {% else %}
         <a href="/#" class="btn btn-secondary disabled">
             Someone else selected for job
@@ -66,6 +79,18 @@
         <a href="/#" class="btn btn-success disabled">
             Job completed
         </a>
+    {% endif %}
+
+    {% if job.status == "completed" and job.createdby == session.username %}
+        {% if not payment %}
+        <a href="/make_payment/{{ job.id }}" class="btn btn-primary">
+            Make Payment
+        </a>
+        {% else %}
+        <a href="/#" class="btn btn-success disabled">
+            Payment Complete
+        </a>
+        {% endif %}
     {% endif %}
     {% if job.createdby == session.username %}
     <a href="/create" class="btn btn-secondary">

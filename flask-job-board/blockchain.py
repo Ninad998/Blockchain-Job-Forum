@@ -42,6 +42,9 @@ class BlockChain(object):
     def get_serialized_chain(self):
         return [vars(block) for block in self.chain]
 
+    def remove_block_in_chain(self,block_id):
+        self.chain.pop()
+
     def create_genesis_block(self):
         self.create_new_block(proof=0, previous_hash=0)
 
@@ -78,6 +81,7 @@ class BlockChain(object):
             'user': data.get('user',{}),
             'job': data.get('job',{}),
             'application': data.get('application',{}),
+            'transaction': data.get('transaction',{}),
             'mine_transactions':data.get('mine_transactions',{})
         })
         return True

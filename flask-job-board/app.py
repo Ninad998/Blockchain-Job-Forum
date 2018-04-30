@@ -196,6 +196,7 @@ def get_user_details_db(user_id = '', username = ''):
                 'password': response[4],
                 'account_type': response[5],
                 'created': response[6],
+                'wallet': response[7],
                 }
 
     except Exception as e:
@@ -217,8 +218,8 @@ def insert_user_db(user):
         conn = db['conn']
         cursor = db['cursor']
         query = "INSERT INTO users " \
-                "(id, username, first_name, last_name, passhash, account_type, created) " \
-                "VALUES %r;" % (tuple(user),)
+                "(id, username, first_name, last_name, passhash, account_type, created, wallet) " \
+                "VALUES %r;" % tuple(user)
         cursor.execute(query)
         conn.commit()
     except Exception as e:
@@ -237,11 +238,11 @@ def update_user_db(user):
         cursor = db['cursor']
         query = "UPDATE users SET " \
                 "username='%s', first_name='%s', last_name='%s', passhash='%s', " \
-                "account_type='%s', created='%s' " \
+                "account_type='%s', created='%s', wallet=%s " \
                 "WHERE id=%s;" % (user['username'], user['first_name'],
                                   user['last_name'], user['password'],
                                   user['account_type'], user['created'],
-                                  user['id'])
+                                  user['wallet'], user['id'])
         cursor.execute(query)
         conn.commit()
     except Exception as e:
@@ -914,7 +915,7 @@ def logout():
     return redirect(url_for('home'))
 
 
-@app.route('/settings', methods = ['GET', 'POST'])
+@app.route('/profile', methods = ['GET', 'POST'])
 @flask_login.login_required
 def settings():
     if request.method == 'POST':
@@ -972,7 +973,7 @@ def settings():
             conn.close()
 
         user = getuser(response)
-        return render_template('settings.html', user = user)
+        return render_template('profile.html', user = user)
 
 def get_message_details(username=""):
     # check for changes:
@@ -1425,7 +1426,8 @@ def check_db():
                 "last_name varchar(50), " \
                 "passhash varchar(500), " \
                 "account_type varchar(500), " \
-                "created DATETIME DEFAULT CURRENT_TIMESTAMP, " \
+                "wallet int, " \
+                "created DATETIME, " \
                 "KEY(username), PRIMARY KEY(id));"
         cursor.execute(query)
         conn.commit()

@@ -110,3 +110,7 @@ ENV/
 *.png
 *.jpg
 *.jpeg
+
+# PyCharm ignore
+.idea/
+

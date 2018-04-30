@@ -32,38 +32,46 @@
 </table>
 
 {% if applied and session.account_type == 'user' %}
-{% if job.selection_possible %}
-{% if selected %}
-<a href="/mark_completed/{{ job.id }}" class="btn btn-secondary">
-    Mark job completed
-</a>
-{% else %}
-<a href="/#" class="btn btn-secondary disabled">
-    Not yet selected for the job
-</a>
-{% endif %}
-<!-- endif selected -->
-{% else %}
-<a href="/#" class="btn btn-secondary disabled">
-    Someone else selected for job
-</a>
-{% endif %}
-<!-- endif job.selection_possible -->
+    {% if job.status == "assigned" and job.username == session.username %}
+        <a href="/mark_completed/{{ job.id }}" class="btn btn-primary">
+            Mark job completed
+        </a>
+    {% elif job.status == "not_selected" %}
+        <a href="/#" class="btn btn-secondary disabled">
+            Not yet selected for the job
+        </a>
+    {% elif job.status == "completed" %}
+        <a href="/#" class="btn btn-success disabled">
+            Job completed
+        </a>
+    {% else %}
+        <a href="/#" class="btn btn-secondary disabled">
+            Someone else selected for job
+        </a>
+    {% endif %}
+    <!-- endif job.selection_possible -->
 {% elif not applied and session.account_type == 'user' %}
-{% if session.logged_in and job.allow_apply %}
-<a href="/apply/{{ job.id }}" class="btn btn-primary">
-    Apply
-</a>
-{% else %}
-<a href="/#" class="btn btn-primary disabled">
-    Apply
-</a>
-{% endif %}
-<!-- endif session.logged_in and job.allow_apply -->
-{% else %}
-<a href="/create" class="btn btn-secondary">
-    Create new job
-</a>
+    {% if session.logged_in and job.allow_apply %}
+        <a href="/apply/{{ job.id }}" class="btn btn-primary">
+            Apply
+        </a>
+    {% else %}
+        <a href="/#" class="btn btn-secondary disabled">
+            Apply
+        </a>
+    {% endif %}
+    <!-- endif session.logged_in and job.allow_apply -->
+{% elif session.account_type == 'company' %}
+    {% if job.status == "completed" %}
+        <a href="/#" class="btn btn-success disabled">
+            Job completed
+        </a>
+    {% endif %}
+    {% if job.createdby == session.username %}
+    <a href="/create" class="btn btn-secondary">
+        Create new job
+    </a>
+    {% endif %}
 {% endif %}
 <!-- endif applied|not applied and session.account_type == 'user' -->
 {% endblock %}

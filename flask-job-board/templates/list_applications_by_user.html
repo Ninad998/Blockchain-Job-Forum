@@ -3,10 +3,40 @@
 {% block main %}
 {% if jobs|length > 0 %}
 <h3>Applications sent by you, click to view job description again</h3>
-{% for job in jobs %}
-Created {{ job.created|timesince }}. <a href="/job/{{ job.id }}">{{ job.company_name }} - {{ job.job_title }}</a>
-<br/>
-{% endfor %}
+<table class="table">
+    <tr>
+        <th class="w-25">Job Name</th>
+        <th class="w-50">Job Posting</td>
+        <th class="w-25">Job Status</td>
+    </tr>
+    {% for job in jobs %}
+    <tr>
+        <td>
+            <a href="/job/{{ job.id }}">{{ job.job_title }} </a>
+        </td>
+        <td>
+            <p>
+                {{ job.job_posting }}
+            </p>
+        </td>
+        <td>
+            {% if job.status == 'not_selected' %}
+            <a href="/#" class="btn btn-success disabled">
+                Under Processing
+            </a>
+            {% elif job.status == 'assigned' and job.username == session.username %}
+            <a href="/#" class="btn btn-primary disabled">
+                Selected
+            </a>
+            {% else %}
+            <a href="/#" class="btn btn-secondary disabled">
+                Not selected
+            </a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
 {% else %}
 <h3>You haven't applied to any jobs yet!</h3>
 {% endif %}

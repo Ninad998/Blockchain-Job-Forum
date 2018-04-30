@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 
 {% block main %}
-<div class="row chain">
-    <div class="col-md-3">
-    {% for block in chain %}
-      <div class="card" style="width: 20rem;">
+<div class="container-fluid">
+<div class="row flex-row flex-nowrap">
+  {% for block in chain %}
+    <div class="col-md-4">
+      <div class="card">
           <ul class="list-group list-group-flush">
             <li class="list-group-item"><h5><b>BLOCK: #</b>{{block.index}}</h5></li>
             <li class="list-group-item"><b>Nonce:</b> {{block.nonce}}</li>
@@ -14,9 +15,9 @@
             <li class="list-group-item"><b>Hash:</b> {{block.hash}}</li>
           </ul>
       </div>
-    {% endfor %}
     </div>
+  {% endfor %}
 </div>
-
+</div>
 
 {% endblock %}

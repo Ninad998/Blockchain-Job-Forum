@@ -50,7 +50,15 @@ class User(flask_login.UserMixin):
     pass
 
 
+db = getMysqlConnection()
+conn = db['conn']
+cursor = db['cursor']
+cursor.close()
+conn.close()
+
+
 def getUserList():
+    global cursor, conn
     db = getMysqlConnection()
     conn = db['conn']
     cursor = db['cursor']
@@ -145,15 +153,98 @@ def get_user_details_blockchain(user_id = '', username = ''):
                     if each_block['body'][0]['user']['id'] == int(user_id):
                         return deepcopy(each_block['body'][0].get('user'))
                 elif username:
-                    print("data",each_block['body'][0]['user'])
+                    print("data", each_block['body'][0]['user'])
                     if each_block['body'][0]['user']['username'] == username:
                         return deepcopy(each_block['body'][0].get('user'))
     return count
 
 
+def get_user_details_db(user_id = '', username = ''):
+    global cursor, conn
+    user = dict()
+    count = 0
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        if user_id:
+            query = "SELECT * FROM users WHERE id = %s;" % user_id
+        elif username:
+            query = "SELECT * FROM users WHERE username = %s;" % username
+        else:
+            query = "SELECT * FROM users;"
+        cursor.execute(query)
+        response = cursor.fetchall()
+        if len(response) > 1:
+            count = len(response)
+        else:
+            response = cursor.fetchone()
+            user = {
+                'id': response[0],
+                'username': response[1],
+                'first_name': response[2],
+                'last_name': response[3],
+                'password': response[4],
+                'account_type': response[5],
+                'created': response[6],
+                }
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+    if count > 0:
+        return count
+
+    return user
+
+
+def insert_user_db(user):
+    global cursor, conn
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "INSERT INTO users " \
+                "(id, username, first_name, last_name, passhash, account_type, created) " \
+                "VALUES %r;" % tuple(user)
+        cursor.execute(query)
+        conn.commit()
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+
+
+def update_user_db(user):
+    global cursor, conn
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "UPDATE users SET " \
+                "username='%s', first_name='%s', last_name='%s', passhash='%s', " \
+                "account_type='%s', created='%s' " \
+                "WHERE id=%s;" % (user['username'], user['first_name'],
+                                  user['last_name'], user['password'],
+                                  user['account_type'], user['created'],
+                                  user['id'])
+        cursor.execute(query)
+        conn.commit()
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+
 def get_job_details_blockchain(job_id = ''):
     chain = blockchain.get_serialized_chain
-    count=0
+    count = 0
     for each_block in reversed(chain):
         if each_block.get('body', []):
             if each_block['body'][0].get('job'):
@@ -162,6 +253,52 @@ def get_job_details_blockchain(job_id = ''):
                     if each_block['body'][0]['job']['id'] == int(job_id):
                         return each_block['body'][0].get('job')
     return count
+
+
+def get_job_details_db(job_id = ''):
+    global cursor, conn
+    job = dict()
+    count = 0
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        if job_id:
+            query = "SELECT * FROM jobs WHERE id = %s;" % job_id
+        else:
+            query = "SELECT * FROM jobs;"
+
+        cursor.execute(query)
+        response = cursor.fetchall()
+        if len(response) > 1:
+            count = len(response)
+        else:
+            response = cursor.fetchone()
+            job = {
+                'id': response[0],
+                'company_name': response[1],
+                'company_location': response[2],
+                'company_url': response[3],
+                'job_title': response[4],
+                'job_posting': response[5],
+                'application_instructions': response[6],
+                'created': response[7],
+                'createdby': response[8],
+                'status': response[9],
+                'username': response[10],
+                }
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+    if count > 0:
+        return count
+
+    return job
+
 
 def get_job_list(username = ''):
     chain = blockchain.get_serialized_chain
@@ -177,6 +314,86 @@ def get_job_list(username = ''):
     return blockchain_job_list
 
 
+def get_job_list_db(username = ''):
+    global cursor, conn
+    jobs = list()
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        if username:
+            query = "SELECT * FROM jobs WHERE createdby LIKE %%%s%%;" % username
+        else:
+            query = "SELECT * FROM jobs;"
+        cursor.execute(query)
+        response = cursor.fetchall()
+        for row in response:
+            job = {
+                'id': row[0],
+                'company_name': row[1],
+                'company_location': row[2],
+                'company_url': row[3],
+                'job_title': row[4],
+                'job_posting': row[5],
+                'application_instructions': row[6],
+                'created': row[7],
+                'createdby': row[8],
+                'status': row[9],
+                'username': row[10],
+                }
+            jobs.append(job)
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+    return jobs
+
+
+def insert_job_db(job):
+    global cursor, conn
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "INSERT INTO jobs " \
+                "(id, company_name, company_location, company_url, job_title, " \
+                "job_posting, application_instructions, created, createdby, " \
+                "status, username) VALUES %r;" % tuple(job)
+        cursor.execute(query)
+        conn.commit()
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def update_job_db(job):
+    global cursor, conn
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "UPDATE jobs SET " \
+                "company_name='%s', company_location='%s', company_url='%s', job_title='%s', " \
+                "job_posting='%s', application_instructions='%s', created='%s', createdby='%s', " \
+                "status='%s', username='%s' " \
+                "WHERE id=%s;" % (job['company_name'], job['company_location'], job['company_url'],
+                                  job['job_title'], job['job_posting'], job['application_instructions'],
+                                  job['created'], job['createdby'], job['status'], job['username'],
+                                  job['id'])
+        cursor.execute(query)
+        conn.commit()
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+
 def get_application_details_blockchain(job_id = '', username = '', app_id = ''):
     chain = blockchain.get_serialized_chain
     blockchain_application_list = []
@@ -184,7 +401,7 @@ def get_application_details_blockchain(job_id = '', username = '', app_id = ''):
     for each_block in reversed(chain):
         if each_block.get('body', []):
             if each_block['body'][0].get('application') and each_block['body'][0].get('job'):
-                count +=1 
+                count += 1
                 if app_id:
                     if int(each_block['body'][0]['application']['id']) == int(app_id):
                         return each_block['body'][0].get('application')
@@ -193,6 +410,47 @@ def get_application_details_blockchain(job_id = '', username = '', app_id = ''):
                             each_block['body'][0]['application']['username'] == username:
                         return each_block['body'][0].get('application')
     return count
+
+
+def get_application_details_db(job_id = '', username = '', app_id = ''):
+    global cursor, conn
+    application = dict()
+    count = 0
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        if app_id:
+            query = "SELECT * FROM applications WHERE id = %s;" % app_id
+        elif job_id and username:
+            query = "SELECT * FROM applications WHERE job_id = %s AND username LIKE %%%s%%;" % (job_id, username)
+        else:
+            query = "SELECT * FROM applications;"
+        cursor.execute(query)
+        response = cursor.fetchall()
+        if len(response) > 1:
+            count = len(response)
+        else:
+            response = cursor.fetchone()
+            application = {
+                'id': response[0],
+                'job_id': response[1],
+                'username': response[2],
+                'description': response[3],
+                'dateofcreation': response[4],
+                }
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+    if count > 0:
+        return count
+
+    return application
+
 
 def get_application_list(job_id = '', username = ''):
     chain = blockchain.get_serialized_chain
@@ -209,6 +467,78 @@ def get_application_list(job_id = '', username = ''):
                 else:
                     blockchain_application_list.append(each_block['body'][0].get('application'))
     return blockchain_application_list
+
+
+def get_application_list_db(job_id = '', username = ''):
+    global cursor, conn
+    applications = list()
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        if job_id:
+            query = "SELECT * FROM applications WHERE id = %s;" % job_id
+        elif username:
+            query = "SELECT * FROM applications WHERE username LIKE %%%s%%;" % username
+        else:
+            query = "SELECT * FROM applications;"
+        cursor.execute(query)
+        response = cursor.fetchall()
+        for row in response:
+            application = {
+                'id': response[0],
+                'job_id': response[1],
+                'username': response[2],
+                'description': response[3],
+                'dateofcreation': response[4],
+                }
+            applications.append(application)
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+    return applications
+
+
+def insert_application_db(application):
+    global cursor, conn
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "INSERT INTO applications " \
+                "(id, job_id, username, description, dateofcreation) " \
+                "VALUES %r;" % tuple(application)
+        cursor.execute(query)
+        conn.commit()
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+
+def update_application_db(application):
+    global cursor, conn
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "UPDATE applications SET " \
+                "job_id='%s', username='%s', description='%s', dateofcreation='%s' " \
+                "WHERE id=%s;" % (application['job_id'], application['username'],
+                                  application['description'], application['dateofcreation'],
+                                  application['id'])
+        cursor.execute(query)
+        conn.commit()
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
 
 
 def generatejob(response):
@@ -300,7 +630,7 @@ def create_job():
             'createdby': flask_login.current_user.id,
             'created': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
             'id': len(get_job_details_blockchain()) + 1
-            'status':'not_selected'
+            'status': 'not_selected'
             }
         print("job_form_data", job_form_data)
         transaction_data['job'] = job_form_data
@@ -836,12 +1166,12 @@ def list_applications(job_id):
             job['select_possible'] = True
         else:
             job['select_possible'] = False
-        job['user']= deepcopy(get_user_details_blockchain(username=str(job['username']))[0])
+        job['user'] = deepcopy(get_user_details_blockchain(username = str(job['username']))[0])
         if not job['select_possible']:
             if get_job_status(str(job['user']['username'])):
-                job['user']['selected']= True
+                job['user']['selected'] = True
             else:
-                job['user']['selected']= False
+                job['user']['selected'] = False
         print(job)
         jobs.append(job)
     # jobs = list()
@@ -891,7 +1221,7 @@ def mark_selected(application_id):
     job = get_job_details_blockchain(str(application['job_id']))[0]
     job['status'] = 'assigned'
     job['username'] = application['username']
-    transaction_data={'job':job}
+    transaction_data = {'job': job}
     index = blockchain.create_new_transaction(transaction_data)
     print("index", index)
     # NOTE: Can be used later
@@ -906,7 +1236,7 @@ def mark_selected(application_id):
 
     if result.get('status', False):
         print("applications mined!")
-    return redirect(url_for('list_applications', job_id=int(application['job_id'])))
+    return redirect(url_for('list_applications', job_id = int(application['job_id'])))
 
 
 @app.errorhandler(404)
@@ -915,6 +1245,7 @@ def page_not_found(e):
 
 
 def check_db():
+    global cursor, conn
     try:
         db = getMysqlConnection()
         conn = db['conn']
@@ -927,14 +1258,14 @@ def check_db():
         conn = db['conn']
         cursor = db['cursor']
         query = "CREATE TABLE users (" \
-                "id int NOT NULL AUTO_INCREMENT, " \
+                "id int NOT NULL, " \
                 "username varchar(50), " \
                 "first_name varchar(50), " \
                 "last_name varchar(50), " \
                 "passhash varchar(500), " \
                 "account_type varchar(500), " \
                 "created DATETIME DEFAULT CURRENT_TIMESTAMP, " \
-                "KEY(id),PRIMARY KEY(username));"
+                "PRIMARY KEY(id));"
         cursor.execute(query)
         conn.commit()
     finally:
@@ -953,18 +1284,22 @@ def check_db():
         conn = db['conn']
         cursor = db['cursor']
         query = "CREATE TABLE jobs (" \
-                "id int NOT NULL AUTO_INCREMENT," \
+                "id int NOT NULL," \
                 "company_name varchar(255)," \
                 "company_location varchar(255)," \
                 "company_url varchar(255)," \
                 "job_title varchar(255)," \
                 "job_posting varchar(255)," \
                 "application_instructions varchar(1000)," \
-                "created DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, " \
+                "created DATETIME, " \
                 "createdby varchar(50), " \
+                "status varchar(50), " \
+                "username varchar(50), " \
                 "CONSTRAINT fk_key_1 FOREIGN KEY (createdby) " \
                 "REFERENCES users (username) ON DELETE CASCADE ON UPDATE CASCADE, " \
-                "KEY(id), PRIMARY KEY(company_name));"
+                "CONSTRAINT fk_key_2 FOREIGN KEY (username) " \
+                "REFERENCES users (username) ON DELETE CASCADE ON UPDATE CASCADE, " \
+                "PRIMARY KEY(id));"
         cursor.execute(query)
         conn.commit()
     finally:

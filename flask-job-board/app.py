@@ -1274,13 +1274,13 @@ def check_db():
         cursor = db['cursor']
         query = "CREATE TABLE users (" \
                 "id int NOT NULL, " \
-                "username varchar(50), " \
+                "username varchar(50) NOT NULL, " \
                 "first_name varchar(50), " \
                 "last_name varchar(50), " \
                 "passhash varchar(500), " \
                 "account_type varchar(500), " \
                 "created DATETIME DEFAULT CURRENT_TIMESTAMP, " \
-                "PRIMARY KEY(id));"
+                "KEY(username), PRIMARY KEY(id));"
         cursor.execute(query)
         conn.commit()
     finally:

@@ -213,6 +213,7 @@ def get_user_details_db(user_id = '', username = ''):
 
 def insert_user_db(user):
     global cursor, conn
+    ret = False
     try:
         db = getMysqlConnection()
         conn = db['conn']
@@ -220,18 +221,19 @@ def insert_user_db(user):
         query = "INSERT INTO users " \
                 "(id, username, first_name, last_name, passhash, account_type, created, wallet) " \
                 "VALUES %r;" % tuple(user)
-        cursor.execute(query)
+        ret = cursor.execute(query)
         conn.commit()
     except Exception as e:
         print(e)
     finally:
         cursor.close()
         conn.close()
-    return True
+    return ret
 
 
 def update_user_db(user):
     global cursor, conn
+    ret = False
     try:
         db = getMysqlConnection()
         conn = db['conn']
@@ -243,13 +245,14 @@ def update_user_db(user):
                                   user['last_name'], user['password'],
                                   user['account_type'], user['created'],
                                   user['wallet'], user['id'])
-        cursor.execute(query)
+        ret = cursor.execute(query)
         conn.commit()
     except Exception as e:
         print(e)
     finally:
         cursor.close()
         conn.close()
+    return ret
 
 
 def get_job_details_blockchain(job_id = ''):
@@ -381,6 +384,7 @@ def get_job_list_db(username = ''):
 
 def insert_job_db(job):
     global cursor, conn
+    ret = False
     try:
         db = getMysqlConnection()
         conn = db['conn']
@@ -389,17 +393,19 @@ def insert_job_db(job):
                 "(id, company_name, company_location, company_url, job_title, " \
                 "job_posting, application_instructions, created, createdby, " \
                 "status, username) VALUES %r;" % tuple(job)
-        cursor.execute(query)
+        ret = cursor.execute(query)
         conn.commit()
     except Exception as e:
         print(e)
     finally:
         cursor.close()
         conn.close()
+    return ret
 
 
 def update_job_db(job):
     global cursor, conn
+    ret = False
     try:
         db = getMysqlConnection()
         conn = db['conn']
@@ -412,13 +418,14 @@ def update_job_db(job):
                                   job['job_title'], job['job_posting'], job['application_instructions'],
                                   job['created'], job['createdby'], job['status'], job['username'],
                                   job['id'])
-        cursor.execute(query)
+        ret = cursor.execute(query)
         conn.commit()
     except Exception as e:
         print(e)
     finally:
         cursor.close()
         conn.close()
+    return ret
 
 
 def get_application_details_blockchain(job_id = '', username = '', app_id = ''):
@@ -542,6 +549,7 @@ def get_application_list_db(job_id = '', username = ''):
 
 def insert_application_db(application):
     global cursor, conn
+    ret = False
     try:
         db = getMysqlConnection()
         conn = db['conn']
@@ -549,17 +557,19 @@ def insert_application_db(application):
         query = "INSERT INTO applications " \
                 "(id, job_id, username, description, dateofcreation) " \
                 "VALUES %r;" % tuple(application)
-        cursor.execute(query)
+        ret = cursor.execute(query)
         conn.commit()
     except Exception as e:
         print(e)
     finally:
         cursor.close()
         conn.close()
+    return ret
 
 
 def update_application_db(application):
     global cursor, conn
+    ret = False
     try:
         db = getMysqlConnection()
         conn = db['conn']
@@ -569,13 +579,200 @@ def update_application_db(application):
                 "WHERE id=%s;" % (application['job_id'], application['username'],
                                   application['description'], application['dateofcreation'],
                                   application['id'])
-        cursor.execute(query)
+        ret = cursor.execute(query)
         conn.commit()
     except Exception as e:
         print(e)
     finally:
         cursor.close()
         conn.close()
+    return ret
+
+
+def get_transaction_details_db(id = ''):
+    global cursor, conn
+    transaction = dict()
+    count = 0
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        if id:
+            query = "SELECT * FROM transactions WHERE id = %s;" % id
+        else:
+            query = "SELECT * FROM transactions;"
+        cursor.execute(query)
+        response = cursor.fetchall()
+        if len(response) > 1:
+            count = len(response)
+        else:
+            response = cursor.fetchone()
+            transaction = {
+                'id': response[0],
+                'job_id': response[1],
+                'sender': response[2],
+                'receiver': response[3],
+                'amount': response[4],
+                'status': response[5],
+                }
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+    if count > 0:
+        return count
+
+    return transaction
+
+
+def get_transaction_list_db(sender = '', receiver = ''):
+    global cursor, conn
+    transactions = list()
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        if sender:
+            query = "SELECT * FROM transactions WHERE sender LIKE %%%s%%;" % sender
+        elif receiver:
+            query = "SELECT * FROM transactions WHERE receiver LIKE %%%s%%;" % receiver
+        else:
+            query = "SELECT * FROM transactions;"
+        cursor.execute(query)
+        response = cursor.fetchall()
+        for row in response:
+            transaction = {
+                'id': row[0],
+                'job_id': row[1],
+                'sender': row[2],
+                'receiver': row[3],
+                'amount': row[4],
+                'status': row[5],
+                }
+            transactions.append(transaction)
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+    return transactions
+
+
+def insert_transaction_db(transaction):
+    global cursor, conn
+    ret = False
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "INSERT INTO transactions " \
+                "(id, job_id, sender, receiver, amount, status) " \
+                "VALUES %r;" % tuple(transaction)
+        ret = cursor.execute(query)
+        conn.commit()
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+    return ret
+
+
+def get_message_details_db(id = ''):
+    global cursor, conn
+    message = dict()
+    count = 0
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        if id:
+            query = "SELECT * FROM messages WHERE id = %s;" % id
+        else:
+            query = "SELECT * FROM messages;"
+        cursor.execute(query)
+        response = cursor.fetchall()
+        if len(response) > 1:
+            count = len(response)
+        else:
+            response = cursor.fetchone()
+            message = {
+                'id': response[0],
+                'sender': response[1],
+                'receiver': response[2],
+                'sent': response[3],
+                'message': response[4],
+                }
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+    if count > 0:
+        return count
+
+    return message
+
+
+def get_message_list_db(sender = '', receiver = ''):
+    global cursor, conn
+    messages = list()
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        if sender:
+            query = "SELECT * FROM messages WHERE sender LIKE %%%s%%;" % sender
+        elif receiver:
+            query = "SELECT * FROM messages WHERE receiver LIKE %%%s%%;" % receiver
+        else:
+            query = "SELECT * FROM messages;"
+        cursor.execute(query)
+        response = cursor.fetchall()
+        for row in response:
+            message = {
+                'id': row[0],
+                'sender': row[1],
+                'receiver': row[2],
+                'sent': response[3],
+                'message': response[4],
+                }
+            messages.append(message)
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+    return messages
+
+
+def insert_message_db(message):
+    global cursor, conn
+    ret = False
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "INSERT INTO messages " \
+                "(id, sender, receiver, sent, message) " \
+                "VALUES %r;" % tuple(message)
+        ret = cursor.execute(query)
+        conn.commit()
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+    return ret
 
 
 def get_chain_list_db(index = ''):
@@ -1483,8 +1680,8 @@ def check_db():
         cursor = db['cursor']
         query = "CREATE TABLE applications (" \
                 "id int NOT NULL, " \
-                "job_id int(11) NOT NULL, " \
-                "username varchar(45) NOT NULL, " \
+                "job_id int NOT NULL, " \
+                "username varchar(50) NOT NULL, " \
                 "description varchar(255), " \
                 "dateofcreation DATETIME, " \
                 "CONSTRAINT fk_key_3 FOREIGN KEY (job_id) " \
@@ -1492,6 +1689,65 @@ def check_db():
                 "CONSTRAINT fk_key_4 FOREIGN KEY (username) " \
                 "REFERENCES users (username) ON DELETE CASCADE ON UPDATE CASCADE, " \
                 "KEY(id), PRIMARY KEY (job_id, username));"
+        cursor.execute(query)
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "SELECT * FROM transactions  LIMIT 1;"
+        cursor.execute(query)
+    except Exception as e:
+        print(e)
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "CREATE TABLE transactions (" \
+                "id varchar(50) NOT NULL, " \
+                "job_id int NOT NULL, " \
+                "sender varchar(50) NOT NULL, " \
+                "receiver varchar(50) NOT NULL, " \
+                "amount int NOT NULL, " \
+                "status varchar(50), " \
+                "CONSTRAINT fk_key_5 FOREIGN KEY (job_id) " \
+                "REFERENCES jobs (id) ON DELETE CASCADE ON UPDATE CASCADE, " \
+                "CONSTRAINT fk_key_6 FOREIGN KEY (sender) " \
+                "REFERENCES users (username) ON DELETE CASCADE ON UPDATE CASCADE, " \
+                "CONSTRAINT fk_key_7 FOREIGN KEY (receiver) " \
+                "REFERENCES users (username) ON DELETE CASCADE ON UPDATE CASCADE, " \
+                "PRIMARY KEY (id));"
+        cursor.execute(query)
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "SELECT * FROM messages LIMIT 1;"
+        cursor.execute(query)
+    except Exception as e:
+        print(e)
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "CREATE TABLE messages (" \
+                "id varchar(50) NOT NULL, " \
+                "sender varchar(50) NOT NULL, " \
+                "receiver varchar(50) NOT NULL, " \
+                "sent DATETIME NOT NULL, " \
+                "message varchar(500) NOT NULL, " \
+                "CONSTRAINT fk_key_8 FOREIGN KEY (sender) " \
+                "REFERENCES users (username) ON DELETE CASCADE ON UPDATE CASCADE, " \
+                "CONSTRAINT fk_key_9 FOREIGN KEY (receiver) " \
+                "REFERENCES users (username) ON DELETE CASCADE ON UPDATE CASCADE, " \
+                "PRIMARY KEY (id));"
         cursor.execute(query)
         conn.commit()
     finally:
@@ -1523,7 +1779,6 @@ def check_db():
     finally:
         cursor.close()
         conn.close()
-
 
 # Blocakchain API's
 # @app.route('/mine', methods=['GET'])

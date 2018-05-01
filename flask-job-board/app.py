@@ -1612,6 +1612,11 @@ def mine(user_address):
 
 @app.route('/blockchain', methods = ['GET'])
 def get_full_blockchain():
+        # check for changes:
+    try:
+        consensus()
+    except Exception as e:
+        print(e)
     response = {'chain': blockchain.get_serialized_chain}
     return render_template('chain.html', chain = response['chain'])
 
@@ -1682,6 +1687,6 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--port', default = 5000, type = int)
     args = parser.parse_args()
     check_db()
-    # register_node()
+    register_node()
     app.run(host = args.host, port = args.port, debug = True, threaded = True)
     # atexit.register(exit_handler)

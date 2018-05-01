@@ -1,4 +1,4 @@
-import time
+from datetime import datetime
 import hashlib
 
 
@@ -9,7 +9,7 @@ class Block(object):
         self.proof = proof
         self.previous_hash = previous_hash
         self.body = body
-        self.creation = creation or time.time()
+        self.creation = creation or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.nonce, self.hash = self.compute_hash_with_proof_of_work()
 
     # Compute hash based upon the nonce value
@@ -44,7 +44,7 @@ class BlockChain(object):
 
     def remove_block_in_chain(self,block_id):
         self.chain.pop(block_id)
-
+        
     def create_genesis_block(self):
         self.create_new_block(proof=0, previous_hash=0)
 

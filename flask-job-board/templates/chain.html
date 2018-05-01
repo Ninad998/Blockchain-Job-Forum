@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 
 {% block main %}
-<div class="row" style="width: 100%; overflow-x: auto;">
+<div class="container-fluid">
+<div class="row flex-row flex-nowrap">
     {% for block in chain %}
     <div class="col-md-4">
         <div class="card">
@@ -31,13 +32,14 @@
                     No data inserted
                     {% endif %}
                 </li>
-                <li class="list-group-item"><b>TimeStamp:</b> {{ block.timestamp }}</li>
+                <li class="list-group-item"><b>TimeStamp:</b> {{ block.creation }}</li>
                 <li class="list-group-item"><b>Previous Hash:</b> {{ block.previous_hash }}</li>
                 <li class="list-group-item"><b>Hash:</b> {{ block.hash }}</li>
             </ul>
         </div>
     </div>
     {% endfor %}
+</div>
 </div>
 
 {% endblock %}

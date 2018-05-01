@@ -8,7 +8,7 @@
                 <div class="col-md-6">
                     <label for="from_msg">From: </label>
                     <input type="text" class="form-control" id="from_msg" name="from_msg" value={{ user.username }}
-                           disabled>
+                           readonly="readonly">
                 </div>
                 <div class="col-md-6">
                     <label for="to_msg">To: </label>
@@ -29,7 +29,11 @@
             <textarea class="form-control" id="msg" name="msg" rows="3"></textarea>
         </div>
         <div class="form-group row">
+            {% if not mail_contacts %}
+            <button type="submit" class="btn btn-primary" style="margin-left: 2em" disabled="disabled">Send Message</button>
+            {% else %}
             <button type="submit" class="btn btn-primary" style="margin-left: 2em">Send Message</button>
+            {% endif %}
             <button type="reset" class="btn btn-secondary-outline" style="margin-left: 2em">Cancel</button>
         </div>
     </form>

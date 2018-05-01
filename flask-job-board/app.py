@@ -126,7 +126,7 @@ def get_blockchain_length():
 def snapshot_block():
     chain = blockchain.get_serialized_chain
     block_id = 0
-    block_items = ['index', 'proof', 'prev_hash', 'body', 'creation', 'nonce', 'hash']
+    block_items = ['index', 'proof', 'previous_hash', 'body', 'creation', 'nonce', 'hash']
     if chain[block_id]:
         block_data = [chain[block_id][item] for item in block_items]
         insert_block_db(block_data)
@@ -185,7 +185,6 @@ def get_user_details_blockchain(user_id='', username=''):
                     if each_block['body'][0]['user']['id'] == int(user_id):
                         return deepcopy(each_block['body'][0].get('user'))
                 elif username:
-                    print("data", each_block['body'][0]['user'])
                     if each_block['body'][0]['user']['username'] == username:
                         return deepcopy(each_block['body'][0].get('user'))
     if user_id:
@@ -247,7 +246,7 @@ def insert_user_db(user):
         cursor = db['cursor']
         query = "INSERT INTO users " \
                 "(id, username, first_name, last_name, passhash, account_type, created, wallet) " \
-                "VALUES %r;" % tuple(user)
+                "VALUES %r;" % (tuple(user),)
         ret = cursor.execute(query)
         conn.commit()
     except Exception as e:
@@ -419,7 +418,7 @@ def insert_job_db(job):
         query = "INSERT INTO jobs " \
                 "(id, company_name, company_location, company_url, job_title, " \
                 "job_posting, application_instructions, created, createdby, " \
-                "status, username) VALUES %r;" % tuple(job)
+                "status, username) VALUES %r;" % (tuple(job),)
         ret = cursor.execute(query)
         conn.commit()
     except Exception as e:
@@ -592,7 +591,7 @@ def insert_application_db(application):
         cursor = db['cursor']
         query = "INSERT INTO applications " \
                 "(id, job_id, username, description, dateofcreation) " \
-                "VALUES %r;" % tuple(application)
+                "VALUES %r;" % (tuple(application),)
         ret = cursor.execute(query)
         conn.commit()
     except Exception as e:
@@ -721,7 +720,7 @@ def insert_transaction_db(transaction):
         cursor = db['cursor']
         query = "INSERT INTO transactions " \
                 "(id, job_id, sender, receiver, amount, status) " \
-                "VALUES %r;" % tuple(transaction)
+                "VALUES %r;" % (tuple(transaction),)
         ret = cursor.execute(query)
         conn.commit()
     except Exception as e:
@@ -832,7 +831,7 @@ def insert_message_db(message):
         cursor = db['cursor']
         query = "INSERT INTO messages " \
                 "(id, sender, receiver, sent, message) " \
-                "VALUES %r;" % tuple(message)
+                "VALUES %r;" % (tuple(message),)
         ret = cursor.execute(query)
         conn.commit()
     except Exception as e:
@@ -879,7 +878,7 @@ def insert_block_db(block):
         cursor = db['cursor']
         query = "INSERT INTO chain " \
                 "(id, proof, prev_hash, body, creation, nonce, hash) " \
-                "VALUES %r;" % tuple(block)
+                "VALUES %r;" % (tuple(block),)
         ret = cursor.execute(query)
         conn.commit()
     except Exception as e:

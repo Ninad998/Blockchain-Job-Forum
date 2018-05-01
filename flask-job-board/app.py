@@ -135,7 +135,7 @@ def snapshot_block():
             if chain[block_id]['body'][0]['user']:
                 user_data = ['id', 'username', 'first_name', 'last_name', 'password', 'account_type', 'created',
                              'wallet']
-                user_block = [chain[block_id]['body'][0]['user'][user_item] for user_item in user_data]
+                user_block = [str(chain[block_id]['body'][0]['user'][user_item]) for user_item in user_data]
                 response = insert_user_db(user_block)
                 if not response:
                     update_user_db(chain[block_id]['body'][0]['user'])
@@ -254,6 +254,7 @@ def insert_user_db(user):
         query = "INSERT INTO users " \
                 "(id, username, first_name, last_name, passhash, account_type, created, wallet) " \
                 "VALUES %r;" % (tuple(user),)
+        print(query)
         ret = cursor.execute(query)
         conn.commit()
     except Exception as e:

@@ -72,7 +72,7 @@ def getUserList():
 
 @login_manager.user_loader
 def user_loader(username):
-    if get_user_details_blockchain(username=username):
+    if get_user_details_blockchain(username = username):
         user = User()
         user.id = username
         return user
@@ -80,7 +80,7 @@ def user_loader(username):
 
 
 @app.template_filter()
-def timesince(dt, default="just now"):
+def timesince(dt, default = "just now"):
     """
     Returns string representing "time since" e.g.
     3 days ago, 5 hours ago etc.
@@ -113,7 +113,7 @@ def login_user(username, account_type):
 
 def check_applications(job_id, username):
     ret = False
-    jobs = get_application_details_blockchain(job_id=job_id, username=username)
+    jobs = get_application_details_blockchain(job_id = job_id, username = username)
     if isinstance(jobs, dict) and len(jobs) > 0:
         ret = True
     return ret
@@ -169,7 +169,7 @@ def snapshot_block():
     return True
 
 
-def get_user_details_blockchain(user_id='', username=''):
+def get_user_details_blockchain(user_id = '', username = ''):
     # check for changes:
     try:
         consensus()
@@ -188,11 +188,11 @@ def get_user_details_blockchain(user_id='', username=''):
                     if each_block['body'][0]['user']['username'] == username:
                         return deepcopy(each_block['body'][0].get('user'))
     if user_id:
-        response = get_user_details_db(user_id=int(user_id))
+        response = get_user_details_db(user_id = int(user_id))
         if response:
             return deepcopy(response)
     elif username:
-        response = deepcopy(get_user_details_db(username=str(username)))
+        response = deepcopy(get_user_details_db(username = str(username)))
         if response:
             return deepcopy(response)
     else:
@@ -202,7 +202,7 @@ def get_user_details_blockchain(user_id='', username=''):
     return count
 
 
-def get_user_details_db(user_id='', username=''):
+def get_user_details_db(user_id = '', username = ''):
     global cursor, conn
     user = dict()
     count = 0
@@ -222,8 +222,16 @@ def get_user_details_db(user_id='', username=''):
             count = len(response)
         else:
             response = cursor.fetchone()
-            user = {'id': response[0], 'username': response[1], 'first_name': response[2], 'last_name': response[3],
-                'password': response[4], 'account_type': response[5], 'created': response[6], 'wallet': response[7], }
+            user = {
+                'id': response[0],
+                'username': response[1],
+                'first_name': response[2],
+                'last_name': response[3],
+                'password': response[4],
+                'account_type': response[5],
+                'created': response[6],
+                'wallet': response[7],
+            }
 
     except Exception as e:
         print(e)
@@ -267,9 +275,9 @@ def update_user_db(user):
         query = "UPDATE users SET " \
                 "username='%s', first_name='%s', last_name='%s', passhash='%s', " \
                 "account_type='%s', created='%s', wallet=%s " \
-                "WHERE id=%s;" % (
-                user['username'], user['first_name'], user['last_name'], user['password'], user['account_type'],
-                user['created'], user['wallet'], user['id'])
+                "WHERE id=%s;" % (user['username'], user['first_name'], user['last_name'],
+                                  user['password'], user['account_type'], user['created'],
+                                  user['wallet'], user['id'])
         ret = cursor.execute(query)
         conn.commit()
     except Exception as e:
@@ -280,7 +288,7 @@ def update_user_db(user):
     return ret
 
 
-def get_job_details_blockchain(job_id=''):
+def get_job_details_blockchain(job_id = ''):
     # check for changes:
     try:
         consensus()
@@ -296,7 +304,7 @@ def get_job_details_blockchain(job_id=''):
                     if each_block['body'][0]['job']['id'] == int(job_id):
                         return deepcopy(each_block['body'][0].get('job'))
     if job_id:
-        response = get_job_details_db(job_id=int(job_id))
+        response = get_job_details_db(job_id = int(job_id))
         if response:
             return deepcopy(response)
     else:
@@ -306,7 +314,7 @@ def get_job_details_blockchain(job_id=''):
     return count
 
 
-def get_job_details_db(job_id=''):
+def get_job_details_db(job_id = ''):
     global cursor, conn
     job = dict()
     count = 0
@@ -325,10 +333,19 @@ def get_job_details_db(job_id=''):
             count = len(response)
         else:
             response = cursor.fetchone()
-            job = {'id': response[0], 'company_name': response[1], 'company_location': response[2],
-                'company_url': response[3], 'job_title': response[4], 'job_posting': response[5],
-                'application_instructions': response[6], 'created': response[7], 'createdby': response[8],
-                'status': response[9], 'username': response[10], }
+            job = {
+                'id': response[0],
+                'company_name': response[1],
+                'company_location': response[2],
+                'company_url': response[3],
+                'job_title': response[4],
+                'job_posting': response[5],
+                'application_instructions': response[6],
+                'created': response[7],
+                'createdby': response[8],
+                'status': response[9],
+                'username': response[10],
+            }
 
     except Exception as e:
         print(e)
@@ -342,7 +359,7 @@ def get_job_details_db(job_id=''):
     return job
 
 
-def get_job_list(username='', user=''):
+def get_job_list(username = '', user = ''):
     # check for changes:
     try:
         consensus()
@@ -360,25 +377,24 @@ def get_job_list(username='', user=''):
                         if each_block['body'][0]['job']['createdby'] == username:
                             blockchain_job_list.append(each_block['body'][0].get('job'))
                     elif user:
-                        if 'username' in each_block['body'][0]['job'] and each_block['body'][0]['job'][
-                            'username'] == user:
+                        if 'username' in each_block['body'][0]['job'] and each_block['body'][0]['job']['username'] == user:
                             blockchain_job_list.append(each_block['body'][0].get('job'))
 
                     else:
                         blockchain_job_list.append(each_block['body'][0].get('job'))
     if username:
-        response = get_job_list_db(username=str(username))
+        response = get_job_list_db(username = str(username))
         if response:
             blockchain_job_list.extend(response)
     if user:
-        response = get_job_list_db(user=str(user))
+        response = get_job_list_db(user = str(user))
         if response:
             blockchain_job_list.extend(response)
 
     return blockchain_job_list
 
 
-def get_job_list_db(username='', user=''):
+def get_job_list_db(username = '', user = ''):
     global cursor, conn
     jobs = list()
     try:
@@ -394,9 +410,19 @@ def get_job_list_db(username='', user=''):
         cursor.execute(query)
         response = cursor.fetchall()
         for row in response:
-            job = {'id': row[0], 'company_name': row[1], 'company_location': row[2], 'company_url': row[3],
-                'job_title': row[4], 'job_posting': row[5], 'application_instructions': row[6], 'created': row[7],
-                'createdby': row[8], 'status': row[9], 'username': row[10], }
+            job = {
+                'id': row[0],
+                'company_name': row[1],
+                'company_location': row[2],
+                'company_url': row[3],
+                'job_title': row[4],
+                'job_posting': row[5],
+                'application_instructions': row[6],
+                'created': row[7],
+                'createdby': row[8],
+                'status': row[9],
+                'username': row[10],
+            }
             jobs.append(job)
 
     except Exception as e:
@@ -440,10 +466,10 @@ def update_job_db(job):
                 "company_name='%s', company_location='%s', company_url='%s', job_title='%s', " \
                 "job_posting='%s', application_instructions='%s', created='%s', createdby='%s', " \
                 "status='%s', username='%s' " \
-                "WHERE id=%s;" % (
-                job['company_name'], job['company_location'], job['company_url'], job['job_title'], job['job_posting'],
-                job['application_instructions'], job['created'], job['createdby'], job['status'], job['username'],
-                job['id'])
+                "WHERE id=%s;" % (job['company_name'], job['company_location'], job['company_url'],
+                                  job['job_title'], job['job_posting'], job['application_instructions'],
+                                  job['created'], job['createdby'], job['status'], job['username'],
+                                  job['id'])
         ret = cursor.execute(query)
         conn.commit()
     except Exception as e:
@@ -454,7 +480,7 @@ def update_job_db(job):
     return ret
 
 
-def get_application_details_blockchain(job_id='', username='', app_id=''):
+def get_application_details_blockchain(job_id = '', username = '', app_id = ''):
     # check for changes:
     try:
         consensus()
@@ -471,14 +497,14 @@ def get_application_details_blockchain(job_id='', username='', app_id=''):
                         return deepcopy(each_block['body'][0].get('application'))
                 elif job_id and username:
                     if int(each_block['body'][0]['application']['job_id']) == int(job_id) and \
-                                    each_block['body'][0]['application']['username'] == username:
+                            each_block['body'][0]['application']['username'] == username:
                         return deepcopy(each_block['body'][0].get('application'))
     if app_id:
-        response = get_application_details_db(app_id=app_id)
+        response = get_application_details_db(app_id = app_id)
         if response:
             return deepcopy(response)
     elif job_id and username:
-        response = get_application_details_db(job_id=job_id, username=username)
+        response = get_application_details_db(job_id = job_id, username = username)
         if response:
             return deepcopy(response)
     else:
@@ -488,7 +514,7 @@ def get_application_details_blockchain(job_id='', username='', app_id=''):
     return count
 
 
-def get_application_details_db(job_id='', username='', app_id=''):
+def get_application_details_db(job_id = '', username = '', app_id = ''):
     global cursor, conn
     application = dict()
     count = 0
@@ -508,8 +534,13 @@ def get_application_details_db(job_id='', username='', app_id=''):
             count = len(response)
         else:
             response = cursor.fetchone()
-            application = {'id': response[0], 'job_id': response[1], 'username': response[2],
-                'description': response[3], 'dateofcreation': response[4], }
+            application = {
+                'id': response[0],
+                'job_id': response[1],
+                'username': response[2],
+                'description': response[3],
+                'dateofcreation': response[4],
+            }
 
     except Exception as e:
         print(e)
@@ -523,7 +554,7 @@ def get_application_details_db(job_id='', username='', app_id=''):
     return application
 
 
-def get_application_list(job_id='', username=''):
+def get_application_list(job_id = '', username = ''):
     # check for changes:
     try:
         consensus()
@@ -543,17 +574,17 @@ def get_application_list(job_id='', username=''):
                 else:
                     blockchain_application_list.append(each_block['body'][0].get('application'))
     if job_id:
-        response = get_application_list_db(job_id=int(job_id))
+        response = get_application_list_db(job_id = int(job_id))
         if response:
             blockchain_application_list.extend(response)
     elif username:
-        response = get_application_list_db(username=str(username))
+        response = get_application_list_db(username = str(username))
         if response:
             blockchain_application_list.extend(response)
     return blockchain_application_list
 
 
-def get_application_list_db(job_id='', username=''):
+def get_application_list_db(job_id = '', username = ''):
     global cursor, conn
     applications = list()
     try:
@@ -569,8 +600,13 @@ def get_application_list_db(job_id='', username=''):
         cursor.execute(query)
         response = cursor.fetchall()
         for row in response:
-            application = {'id': row[0], 'job_id': row[1], 'username': row[2], 'description': row[3],
-                'dateofcreation': row[4], }
+            application = {
+                'id': row[0],
+                'job_id': row[1],
+                'username': row[2],
+                'description': row[3],
+                'dateofcreation': row[4],
+            }
             applications.append(application)
 
     except Exception as e:
@@ -623,7 +659,7 @@ def update_application_db(application):
     return ret
 
 
-def get_transaction_details(job_id=""):
+def get_transaction_details(job_id = ""):
     # check for changes:
     try:
         consensus()
@@ -639,7 +675,7 @@ def get_transaction_details(job_id=""):
                     if each_block['body'][0]['transaction']['job_id'] == int(job_id):
                         return deepcopy(each_block['body'][0].get('transaction'))
     if job_id:
-        response = get_transaction_details_db(job_id=int(job_id))
+        response = get_transaction_details_db(job_id = int(job_id))
         if response:
             return deepcopy(response)
     else:
@@ -649,7 +685,7 @@ def get_transaction_details(job_id=""):
     return count
 
 
-def get_transaction_details_db(job_id=''):
+def get_transaction_details_db(job_id = ''):
     global cursor, conn
     transaction = dict()
     count = 0
@@ -667,8 +703,14 @@ def get_transaction_details_db(job_id=''):
             count = len(response)
         else:
             response = cursor.fetchone()
-            transaction = {'id': response[0], 'job_id': response[1], 'sender': response[2], 'receiver': response[3],
-                'amount': response[4], 'status': response[5], }
+            transaction = {
+                'id': response[0],
+                'job_id': response[1],
+                'sender': response[2],
+                'receiver': response[3],
+                'amount': response[4],
+                'status': response[5],
+            }
 
     except Exception as e:
         print(e)
@@ -682,7 +724,7 @@ def get_transaction_details_db(job_id=''):
     return transaction
 
 
-def get_transaction_list_db(sender='', receiver=''):
+def get_transaction_list_db(sender = '', receiver = ''):
     global cursor, conn
     transactions = list()
     try:
@@ -698,8 +740,14 @@ def get_transaction_list_db(sender='', receiver=''):
         cursor.execute(query)
         response = cursor.fetchall()
         for row in response:
-            transaction = {'id': row[0], 'job_id': row[1], 'sender': row[2], 'receiver': row[3], 'amount': row[4],
-                'status': row[5], }
+            transaction = {
+                'id': row[0],
+                'job_id': row[1],
+                'sender': row[2],
+                'receiver': row[3],
+                'amount': row[4],
+                'status': row[5],
+            }
             transactions.append(transaction)
 
     except Exception as e:
@@ -731,7 +779,7 @@ def insert_transaction_db(transaction):
     return ret
 
 
-def get_message_details(username=""):
+def get_message_details(username = ""):
     # check for changes:
     try:
         consensus()
@@ -750,7 +798,7 @@ def get_message_details(username=""):
     if blockchain_msg_list:
         return blockchain_msg_list
     if username:
-        response = get_message_list_db(receiver=str(username))
+        response = get_message_list_db(receiver = str(username))
         if response:
             blockchain_msg_list.extend(response)
     else:
@@ -760,7 +808,7 @@ def get_message_details(username=""):
     return count
 
 
-def get_message_details_db(id=''):
+def get_message_details_db(id = ''):
     global cursor, conn
     message = dict()
     count = 0
@@ -778,8 +826,13 @@ def get_message_details_db(id=''):
             count = len(response)
         else:
             response = cursor.fetchone()
-            message = {'id': response[0], 'sender': response[1], 'receiver': response[2], 'date': response[3],
-                'message': response[4], }
+            message = {
+                'id': response[0],
+                'sender': response[1],
+                'receiver': response[2],
+                'date': response[3],
+                'message': response[4],
+            }
 
     except Exception as e:
         print(e)
@@ -793,7 +846,7 @@ def get_message_details_db(id=''):
     return message
 
 
-def get_message_list_db(sender='', receiver=''):
+def get_message_list_db(sender = '', receiver = ''):
     global cursor, conn
     messages = list()
     try:
@@ -809,8 +862,13 @@ def get_message_list_db(sender='', receiver=''):
         cursor.execute(query)
         response = cursor.fetchall()
         for row in response:
-            message = {'id': row[0], 'sender': row[1], 'receiver': row[2], 'date': response[3],
-                'message': response[4], }
+            message = {
+                'id': row[0],
+                'sender': row[1],
+                'receiver': row[2],
+                'date': response[3],
+                'message': response[4],
+            }
             messages.append(message)
 
     except Exception as e:
@@ -842,7 +900,7 @@ def insert_message_db(message):
     return ret
 
 
-def get_chain_list_db(index=''):
+def get_chain_list_db(index = ''):
     global cursor, conn
     chain = list()
     try:
@@ -850,14 +908,52 @@ def get_chain_list_db(index=''):
         conn = db['conn']
         cursor = db['cursor']
         if index:
-            query = "SELECT * FROM chain WHERE index = %s;" % index
+            query = "SELECT * FROM chain WHERE id = %s;" % index
         else:
             query = "SELECT * FROM chain;"
         cursor.execute(query)
         response = cursor.fetchall()
         for row in response:
-            block = {'id': row[0], 'proof': row[1], 'prev_hash': row[2], 'body': row[3], 'creation': row[4],
-                'nonce': row[5], 'hash': row[6], }
+            block = {
+                'index': row[0],
+                'proof': row[1],
+                'prev_hash': row[2],
+                'body': row[3],
+                'creation': row[4],
+                'nonce': row[5],
+                'hash': row[6],
+            }
+            chain.append(block)
+
+    except Exception as e:
+        print(e)
+    finally:
+        cursor.close()
+        conn.close()
+
+    return chain
+
+
+def get_latest_chain_list_db():
+    global cursor, conn
+    chain = list()
+    try:
+        db = getMysqlConnection()
+        conn = db['conn']
+        cursor = db['cursor']
+        query = "SELECT * FROM chain ORDER BY id LIMIT %d;" % app.config['BLOCKCHAIN_LENGTH']
+        cursor.execute(query)
+        response = cursor.fetchall()
+        for row in response:
+            block = {
+                'index': row[0],
+                'proof': row[1],
+                'prev_hash': row[2],
+                'body': row[3],
+                'creation': row[4],
+                'nonce': row[5],
+                'hash': row[6],
+            }
             chain.append(block)
 
     except Exception as e:
@@ -897,23 +993,37 @@ def generatejob(response):
     else:
         allow_apply = False
 
-    job = {'id': response[0], 'company_name': response[1], 'company_location': response[2], 'company_url': response[3],
-        'job_title': response[4], 'job_posting': response[5], 'application_instructions': response[6],
-        'created': response[7], 'createdby': response[8], 'allow_apply': allow_apply}
+    job = {
+        'id': response[0],
+        'company_name': response[1],
+        'company_location': response[2],
+        'company_url': response[3],
+        'job_title': response[4],
+        'job_posting': response[5],
+        'application_instructions': response[6],
+        'created': response[7],
+        'createdby': response[8],
+        'allow_apply': allow_apply
+    }
 
     return job
 
 
 def getuser(response):
-    user = {'id': response[0], 'username': response[1], 'first_name': response[2], 'last_name': response[3],
-        'created': response[5]}
+    user = {
+        'id': response[0],
+        'username': response[1],
+        'first_name': response[2],
+        'last_name': response[3],
+        'created': response[5]
+    }
     return user
 
 
 @app.route("/")
 def home():
     jobs = get_job_list()
-    return render_template('home.html', jobs=jobs)
+    return render_template('home.html', jobs = jobs)
 
 
 @app.route('/about')
@@ -921,7 +1031,7 @@ def about():
     return render_template('about.html')
 
 
-@app.route('/create', methods=['GET', 'POST'])
+@app.route('/create', methods = ['GET', 'POST'])
 @flask_login.login_required
 def create_job():
     if request.method == 'POST':
@@ -941,12 +1051,14 @@ def create_job():
 
         # Block chain initailization
         transaction_data = {}
-        job_form_data = {'id': get_job_details_blockchain() + 1, 'company_name': str(request.form['company_name']),
+        job_form_data = {
+            'id': get_job_details_blockchain() + 1, 'company_name': str(request.form['company_name']),
             'company_location': str(request.form['company_location']), 'company_url': company_ur,
             'job_title': str(request.form['job_title']), 'job_posting': str(request.form['job_posting']),
             'application_instructions': str(request.form['application_instructions']),
             'createdby': flask_login.current_user.id, 'created': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-            'status': 'not_selected', 'username': "NULL", 'payment': str(request.form['payment'])}
+            'status': 'not_selected', 'username': "NULL", 'payment': str(request.form['payment'])
+        }
         transaction_data['job'] = job_form_data
         index = blockchain.create_new_transaction(transaction_data)
         if index:
@@ -956,7 +1068,7 @@ def create_job():
                 snapshot_block()
             next_url = get_job_details_blockchain()
             flash(u'Job successfully created.', 'success')
-            return redirect(url_for('show_job', job_id=next_url))
+            return redirect(url_for('show_job', job_id = next_url))
 
         else:
             flash(u'Mining of the block dint complete successfully.', 'error')
@@ -965,7 +1077,7 @@ def create_job():
         return render_template('create_job.html')
 
 
-@app.route('/signup', methods=['GET', 'POST'])
+@app.route('/signup', methods = ['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         if request.form['password'] == request.form['password2']:
@@ -979,11 +1091,13 @@ def signup():
 
             # Block chain initailization
             transaction_data = {}
-            user_form_data = {'id': get_user_details_blockchain() + 1, 'username': str(request.form['username']),
+            user_form_data = {
+                'id': get_user_details_blockchain() + 1, 'username': str(request.form['username']),
                 'first_name': str(request.form['first_name']), 'last_name': str(request.form['last_name']),
                 'password': pbkdf2_sha256.hash(str(request.form['password'])),
                 'account_type': str(request.form['account_type']),
-                'created': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'wallet': 0, }
+                'created': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")), 'wallet': 0,
+            }
             transaction_data['user'] = user_form_data
             index = blockchain.create_new_transaction(transaction_data)
             if index:
@@ -1006,13 +1120,13 @@ def signup():
         return render_template('create_user.html')
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods = ['GET', 'POST'])
 def login():
     next = request.values.get('next', '')
     if request.method == 'POST':
         user_flag = False
         try:
-            user_details = get_user_details_blockchain(username=str(request.form['username']))
+            user_details = get_user_details_blockchain(username = str(request.form['username']))
             if isinstance(user_details, int):
                 flash(u'User doesnt exist.', 'error')
                 return render_template('login.html')
@@ -1054,7 +1168,7 @@ def logout():
     return redirect(url_for('home'))
 
 
-@app.route('/profile', methods=['GET', 'POST'])
+@app.route('/profile', methods = ['GET', 'POST'])
 @flask_login.login_required
 def settings():
     if request.method == 'POST':
@@ -1093,7 +1207,7 @@ def settings():
             conn.close()
 
         flash(u'Profile was successfully updated.', 'success')
-        return redirect(url_for('show_user', user_id=user_id))
+        return redirect(url_for('show_user', user_id = user_id))
     else:
         try:
             db = getMysqlConnection()
@@ -1109,14 +1223,16 @@ def settings():
             conn.close()
 
         user = getuser(response)
-        return render_template('profile.html', user=user)
+        return render_template('profile.html', user = user)
 
 
-@app.route('/send_mail', methods=['GET', 'POST'])
+@app.route('/send_mail', methods = ['GET', 'POST'])
 def send_mail():
-    msg = {'id': get_message_details() + 1, 'sender': str(request.form['from_msg']),
-           'receiver': str(request.form['to_msg']), 'date': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-           'message': str(request.form['msg'])}
+    msg = {
+        'id': get_message_details() + 1, 'sender': str(request.form['from_msg']),
+        'receiver': str(request.form['to_msg']), 'date': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+        'message': str(request.form['msg'])
+    }
     transaction_data = {'message': msg}
     index = blockchain.create_new_transaction(transaction_data)
     if index:
@@ -1131,10 +1247,10 @@ def send_mail():
 
 @app.route('/mail/<username>')
 def mail(username):
-    user = get_user_details_blockchain(username=str(username))  # dict
+    user = get_user_details_blockchain(username = str(username))  # dict
     mail_contacts = []
     if user['account_type'] == 'company':
-        jobs = get_job_list(username=str(username))  # list
+        jobs = get_job_list(username = str(username))  # list
         for job in jobs:
             if job['status'] != "not_selected":
                 mail_contacts.append(job['username'])
@@ -1144,7 +1260,7 @@ def mail(username):
             mails = []
 
     elif user['account_type'] == 'user':
-        jobs = get_job_list(user=str(username))  # list
+        jobs = get_job_list(user = str(username))  # list
         for job in jobs:
             if job['status'] != "not_selected":
                 mail_contacts.append(job['createdby'])
@@ -1157,13 +1273,13 @@ def mail(username):
         flash(u'Messaging is disabled.', 'success')
         return redirect(url_for('home'))
 
-    return render_template('mail.html', user=user, mail_contacts=mail_contacts, mails=mails)
+    return render_template('mail.html', user = user, mail_contacts = mail_contacts, mails = mails)
 
 
 @app.route('/user/<user_id>')
 def show_user(user_id):
-    user = get_user_details_blockchain(user_id=str(user_id))
-    return render_template('show_user.html', user=user)
+    user = get_user_details_blockchain(user_id = str(user_id))
+    return render_template('show_user.html', user = user)
 
 
 @app.route('/job/<job_id>')
@@ -1189,10 +1305,10 @@ def show_job(job_id):
             if amt:
                 payment = True
 
-    return render_template('show_job.html', job=job, applied=applied, payment=payment)
+    return render_template('show_job.html', job = job, applied = applied, payment = payment)
 
 
-@app.route('/apply/<job_id>', methods=['GET', 'POST'])
+@app.route('/apply/<job_id>', methods = ['GET', 'POST'])
 @flask_login.login_required
 def apply(job_id):
     job = get_job_details_blockchain(str(job_id))
@@ -1207,13 +1323,15 @@ def apply(job_id):
         job['allow_apply'] = allow_apply
 
     if request.method == 'GET':
-        return render_template('apply.html', job=job)
+        return render_template('apply.html', job = job)
 
     # Block chain initailization
     transaction_data = {}
-    application_form_data = {'id': get_application_details_blockchain() + 1, 'job_id': str(job_id),
+    application_form_data = {
+        'id': get_application_details_blockchain() + 1, 'job_id': str(job_id),
         'username': str(flask_login.current_user.id), 'description': str(request.form.get('desc')),
-        'dateofcreation': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}
+        'dateofcreation': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    }
     transaction_data['application'] = application_form_data
     index = blockchain.create_new_transaction(transaction_data)
     if index:
@@ -1249,31 +1367,31 @@ def show_all_users():
         user['email'] = item[2]
         user['created'] = item[8]
         users.append(user)
-    return render_template('show_all_users.html', users=users)
+    return render_template('show_all_users.html', users = users)
 
 
 @app.route('/jobs_applied')
 @flask_login.login_required
 def jobs_applied():
-    application = get_application_list(username=str(flask_login.current_user.id))
+    application = get_application_list(username = str(flask_login.current_user.id))
     jobs = []
     for each_application in application:
-        job = get_job_details_blockchain(job_id=str(each_application['job_id']))
+        job = get_job_details_blockchain(job_id = str(each_application['job_id']))
         jobs.append(job)
-    return render_template('list_applications_by_user.html', jobs=jobs)
+    return render_template('list_applications_by_user.html', jobs = jobs)
 
 
 @app.route('/company')
 @flask_login.login_required
 def list_jobs():
-    jobs = get_job_list(username=str(flask_login.current_user.id))
-    return render_template('company.html', jobs=jobs)
+    jobs = get_job_list(username = str(flask_login.current_user.id))
+    return render_template('company.html', jobs = jobs)
 
 
 @app.route('/list_applications/<job_id>')
 @flask_login.login_required
 def list_applications(job_id):
-    application = get_application_list(job_id=str(job_id))
+    application = get_application_list(job_id = str(job_id))
     jobs = []
     job_details = get_job_details_blockchain(job_id)
     for each_application in application:
@@ -1282,7 +1400,7 @@ def list_applications(job_id):
             job['select_possible'] = True
         else:
             job['select_possible'] = False
-        job['user'] = get_user_details_blockchain(username=str(job['username']))
+        job['user'] = get_user_details_blockchain(username = str(job['username']))
         if not job['select_possible']:
             if job_details['username'] == job['username']:
                 job['user']['selected'] = True
@@ -1293,7 +1411,7 @@ def list_applications(job_id):
         else:
             job['user']['completed'] = False
         jobs.append(job)
-    return render_template('list_applications_for_job.html', jobs=jobs)
+    return render_template('list_applications_for_job.html', jobs = jobs)
 
 
 @app.route('/make_payment/<job_id>')
@@ -1301,8 +1419,10 @@ def list_applications(job_id):
 def make_payment(job_id):
     if session['account_type'] == 'company':
         job = get_job_details_blockchain(str(job_id))
-        payment = {'id': get_transaction_details() + 1, 'job_id': job['id'], 'sender': job['createdby'],
-                   'receiver': job['username'], 'amount': job['payment'], 'job_status': job['status']}
+        payment = {
+            'id': get_transaction_details() + 1, 'job_id': job['id'], 'sender': job['createdby'],
+            'receiver': job['username'], 'amount': job['payment'], 'job_status': job['status']
+        }
         transaction_data = {'transaction': payment}
         index = blockchain.create_new_transaction(transaction_data)
         if index:
@@ -1310,7 +1430,7 @@ def make_payment(job_id):
         if result.get('status', False):
             if get_blockchain_length() > app.config['BLOCKCHAIN_LENGTH']:
                 snapshot_block()
-        return redirect(url_for('show_job', job_id=int(job_id)))
+        return redirect(url_for('show_job', job_id = int(job_id)))
 
 
 @app.route('/mark_completed/<job_id>')
@@ -1324,14 +1444,14 @@ def mark_completed(job_id):
         result = mine(uuid4().hex)
     if result.get('status', False):
         print("Information is Mined")
-    return redirect(url_for('show_job', job_id=int(job_id)))
+    return redirect(url_for('show_job', job_id = int(job_id)))
 
 
 @app.route('/mark_selected/<application_id>')
 @flask_login.login_required
 def mark_selected(application_id):
     # Block chain initailization
-    application = get_application_details_blockchain(app_id=application_id)
+    application = get_application_details_blockchain(app_id = application_id)
     job = get_job_details_blockchain(str(application['job_id']))
     job['status'] = 'assigned'
     job['username'] = application['username']
@@ -1342,7 +1462,7 @@ def mark_selected(application_id):
 
     if result.get('status', False):
         print("Information is Mined")
-    return redirect(url_for('list_applications', job_id=int(application['job_id'])))
+    return redirect(url_for('list_applications', job_id = int(application['job_id'])))
 
 
 @app.errorhandler(404)
@@ -1536,14 +1656,14 @@ def mine(user_address):
     return response
 
 
-@app.route('/blockchain', methods=['GET'])
+@app.route('/blockchain', methods = ['GET'])
 def get_full_blockchain():
     response = {'chain': blockchain.get_serialized_chain}
-    return render_template('chain.html', chain=response['chain'])
+    return render_template('chain.html', chain = response['chain'])
 
 
 # For Sync with the other nodes
-@app.route('/chain', methods=['GET'])
+@app.route('/chain', methods = ['GET'])
 def get_full_chain():
     response = {'chain': blockchain.get_serialized_chain}
     return jsonify(response)
@@ -1555,8 +1675,10 @@ def register_node():
     try:
         node_data = pd.read_csv('server.csv')
         blockchain.create_node(node_data['address'])
-        response = {'status': True, 'message': 'New nodes has been added', 'node_count': len(blockchain.nodes),
-            'nodes': list(blockchain.nodes), }
+        response = {
+            'status': True, 'message': 'New nodes has been added', 'node_count': len(blockchain.nodes),
+            'nodes': list(blockchain.nodes),
+        }
         return response
     except Exception as e:
         print(e)
@@ -1576,7 +1698,7 @@ def consensus():
     if not neighbour_chains:
         return jsonify({'message': 'No neighbour chain is available', 'status': 0})
     # Get the longest chain
-    longest_chain = max(neighbour_chains, key=len)
+    longest_chain = max(neighbour_chains, key = len)
 
     if len(blockchain.chain) >= len(longest_chain):  # If our chain is longest, then do nothing
         response = {'message': 'Chain is already up to date', 'status': 1}
@@ -1589,9 +1711,9 @@ def consensus():
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('-H', '--host', default='0.0.0.0')
-    parser.add_argument('-p', '--port', default=5000, type=int)
+    parser.add_argument('-H', '--host', default = '0.0.0.0')
+    parser.add_argument('-p', '--port', default = 5000, type = int)
     args = parser.parse_args()
     check_db()
     register_node()
-    app.run(host=args.host, port=args.port, debug=True, threaded=True)
+    app.run(host = args.host, port = args.port, debug = True, threaded = True)

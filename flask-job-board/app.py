@@ -1624,10 +1624,10 @@ def get_full_blockchain():
 # For Sync with the other nodes
 @app.route('/chain', methods = ['GET'])
 def get_full_chain():
-    blockchain = blockchain.get_serialized_chain
-    index =v0 
-    if 'index' in  blockchain[-1]:
-        index = blockchain[-1]['index']
+    blocks = blockchain.get_serialized_chain
+    index = 0
+    if 'index' in  blocks[-1]:
+        index = blocks[-1]['index']
     length = len(blockchain.chain) + len(get_chain_list_db())
     response = {'chain': blockchain.get_serialized_chain,'length':length,'index':index}
     print(response)
@@ -1675,15 +1675,20 @@ def consensus():
     if longest_chain[-1]['index'] != index_check:
         longest_chain = neighbour_chains[neighbour_index.index(index_check)]
            
-    print(longest_chain,index_check,check)
+    print(longest_chain,index_check, check)
     # longest_chain = max(neighbour_chains, key = len)
     length = len(blockchain.chain) + len(get_chain_list_db())
-    if length >= len(longest_chain):  # If our chain is longest, then do nothing
+    print(length)
+    print(index_check)
+    if length >= index_check:  # If our chain is longest, then do nothing
         response = {'message': 'Chain is already up to date', 'status': 1}
     else:  # If our chain isn't longest, then we store the longest chain
+        if index_check > 3:
+            snapshot_block()
         blockchain.chain = [blockchain.get_block_object_from_block_data(block) for block in longest_chain]
         response = {'message': 'Chain was replaced', 'status': 2}
 
+    print(response)
     return response
 
 

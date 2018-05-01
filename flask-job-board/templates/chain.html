@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 
 {% block main %}
-<div class="row" style="overflow-x: scroll;">
+<div class="row" style="width: 100%; overflow-x: auto;">
     {% for block in chain %}
     <div class="col-md-4">
         <div class="card">
             <ul class="list-group list-group-flush">
                 <li class="list-group-item"><h5><b>Block: #</b>{{ block.index }}</h5></li>
                 <li class="list-group-item"><b>Nonce:</b> {{ block.nonce }}</li>
-                <li class="list-group-item" style="height: 250px; overflow-y: scroll;"><b>Body:</b>
+                <li class="list-group-item" style="height: 250px; overflow-y: auto;"><b>Body:</b>
                     {% if block.body %}
                     <ul class="list-group list-group-flush">
                         {% if block.body[0].user %}

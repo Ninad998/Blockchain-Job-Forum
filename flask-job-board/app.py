@@ -1624,8 +1624,13 @@ def get_full_blockchain():
 # For Sync with the other nodes
 @app.route('/chain', methods = ['GET'])
 def get_full_chain():
+    blockchain = blockchain.get_serialized_chain
+    index =v0 
+    if 'index' in  blockchain[-1]:
+        index = blockchain[-1]['index']
     length = len(blockchain.chain) + len(get_chain_list_db())
-    response = {'chain': blockchain.get_serialized_chain,'length':length}
+    response = {'chain': blockchain.get_serialized_chain,'length':length,'index':index}
+    print(response)
     return jsonify(response)
 
 
@@ -1649,20 +1654,28 @@ def consensus():
     def get_neighbour_chains():
         neighbour_chains = []
         neighbour_chain_length =[]
+        neighbour_index = []
         for node_address in blockchain.nodes:
             resp = requests.get("http://" + node_address + url_for('get_full_chain')).json()
             chain = resp['chain']
             leng = resp['length']
+            index = resp['index']
             neighbour_chains.append(chain)
             neighbour_chain_length.append(leng)
-        return neighbour_chains,neighbour_chain_length
+            neighbour_index.append(index)
+        return neighbour_chains,neighbour_chain_length,neighbour_index
 
-    neighbour_chains, neighbour_chain_length = get_neighbour_chains()
+    neighbour_chains, neighbour_chain_length, neighbour_index = get_neighbour_chains()
     if not neighbour_chains:
         return jsonify({'message': 'No neighbour chain is available', 'status': 0})
     # Get the longest chain
     check = max(neighbour_chain_length)
+    index_check = max(neighbour_index)
     longest_chain = neighbour_chains[neighbour_chain_length.index(check)]
+    if longest_chain[-1]['index'] != index_check:
+        longest_chain = neighbour_chains[neighbour_index.index(index_check)]
+           
+    print(longest_chain,index_check,check)
     # longest_chain = max(neighbour_chains, key = len)
     length = len(blockchain.chain) + len(get_chain_list_db())
     if length >= len(longest_chain):  # If our chain is longest, then do nothing

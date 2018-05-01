@@ -43,14 +43,18 @@ class BlockChain(object):
         return [vars(block) for block in self.chain]
 
     def remove_block_in_chain(self,block_id):
-        self.chain.pop()
+        self.chain.pop(block_id)
 
     def create_genesis_block(self):
         self.create_new_block(proof=0, previous_hash=0)
 
     def create_new_block(self, proof, previous_hash):
+        if len(self.chain) == 0:
+            block_index = 1
+        else:
+            block_index =self.chain[-1].index + 1
         block = Block(
-            index=len(self.chain),
+            index=block_index,
             proof=proof,
             previous_hash=previous_hash,
             body=self.current_node_transactions

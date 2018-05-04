@@ -1,9 +1,13 @@
 """
+Freelance Website based upon scalable blockchain.
+
+Program execution instruction:
+python app.py -H <host address> -p <port number>
+
 Team: 
 Ninad Tungare        U49815021
 Harshad Nalla Reddy  U60360285
 Chunar Singh         U10488522
-
 """
 # Packages
 import flask
@@ -21,14 +25,18 @@ from argparse import ArgumentParser
 from passlib.hash import pbkdf2_sha256
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 
+# Flask application settings
 app = Flask(__name__)
 app.config.from_object(settings)
 
+# Mysql configurations stored in flask application configuration for security.
 mysql = MySQL()
 app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = 'root'
 app.config['MYSQL_DATABASE_DB'] = 'job_board'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+# Scalibility feature of blockchain length,
+# a client can modified the length based upon their server memory specification.
 app.config['BLOCKCHAIN_LENGTH'] = 3
 mysql.init_app(app)
 
@@ -42,6 +50,9 @@ node_address = uuid4().hex
 
 
 def getMysqlConnection():
+    """
+    Connecting the mysql server with the program.
+    """
     connection = mysql.connect()
     cursor = connection.cursor()
     return {"cursor": cursor, "conn": connection}
@@ -73,6 +84,9 @@ def getUserList():
 
 @login_manager.user_loader
 def user_loader(username):
+    """
+    Loading user primary key value `username` into the load manager for authentication.
+    """
     if get_user_details_blockchain(username = username):
         user = User()
         user.id = username
@@ -104,6 +118,9 @@ def timesince(dt, default = "just now"):
 
 
 def login_user(username, account_type):
+    """
+    Session and Authentication contral via flask_login package.
+    """
     user = User()
     user.id = username
     flask_login.login_user(user)
@@ -113,6 +130,10 @@ def login_user(username, account_type):
 
 
 def check_applications(job_id, username):
+    """
+    Return Boolean value, 
+    based upon the user's if a user has applied for the same job then False else True
+    """
     ret = False
     jobs = get_application_details_blockchain(job_id = job_id, username = username)
     if isinstance(jobs, dict) and len(jobs) > 0:
@@ -121,10 +142,17 @@ def check_applications(job_id, username):
 
 
 def get_blockchain_length():
+    """
+    Return the block-chain length.
+    """
     return len(blockchain.get_serialized_chain)
 
 
 def snapshot_block():
+    """
+    Snapshot the oldest block in to local sql database and truncate it from the blockchain.
+    Apart from snapshot of the block to sql table, Each feature is snapshotted into individual sql tables.
+    """
     chain = blockchain.get_serialized_chain
     block_id = 0
     block_items = ['index', 'proof', 'previous_hash', 'body', 'creation', 'nonce', 'hash']
@@ -163,12 +191,17 @@ def snapshot_block():
                 msg_data = ['id', 'sender', 'receiver', 'date', 'message']
                 msg_block = [chain[block_id]['body'][0]['message'][msg_item] for msg_item in msg_data]
                 response = insert_message_db(msg_block)
+        # Truncate the oldest block from block-chain.
         blockchain.remove_block_in_chain(block_id)
     return True
 
 
 def get_user_details_blockchain(user_id = '', username = ''):
-    # check for changes:
+    """
+    Function that returns either user details based upon user_id or username from the blockchain and local database 
+    or returns count of users from blockchain and local database. 
+    """
+    # Consensus algorithm check to see if any peers chain has been modified.
     try:
         consensus()
     except Exception as e:
@@ -201,6 +234,10 @@ def get_user_details_blockchain(user_id = '', username = ''):
 
 
 def get_user_details_db(user_id = '', username = ''):
+    """
+    Function that returns either user details based upon user_id or username from local database 
+    or returns count of users from local database. 
+    """
     global cursor, conn
     user = dict()
     count = 0
@@ -245,6 +282,9 @@ def get_user_details_db(user_id = '', username = ''):
 
 
 def insert_user_db(user):
+    """
+    Function that inserts user details from blockchain to local database. 
+    """
     global cursor, conn
     ret = False
     try:
@@ -266,6 +306,9 @@ def insert_user_db(user):
 
 
 def update_user_db(user):
+    """
+    Function that updates user details from blockchain to local database. 
+    """
     global cursor, conn
     ret = False
     try:
@@ -289,7 +332,11 @@ def update_user_db(user):
 
 
 def get_job_details_blockchain(job_id = ''):
-    # check for changes:
+    """
+    Function that returns either jobs detail based upon job_id from blockchain and local database 
+    or returns count of jobs from blockchain and local database. 
+    """
+    # Consensus algorithm check to see if any peers chain has been modified.
     try:
         consensus()
     except Exception as e:
@@ -315,6 +362,10 @@ def get_job_details_blockchain(job_id = ''):
 
 
 def get_job_details_db(job_id = ''):
+    """
+    Function that returns either jobs detail based upon job_id from local database 
+    or returns count of jobs from local database. 
+    """
     global cursor, conn
     job = dict()
     count = 0
@@ -360,7 +411,11 @@ def get_job_details_db(job_id = ''):
 
 
 def get_job_list(username = '', user = ''):
-    # check for changes:
+    """
+    Function that returns either list of jobs based upon assigned user or the job creater from blockchain and local database
+    or the entire list of jobs from the blockchain and local database. 
+    """
+    # Consensus algorithm check to see if any peers chain has been modified.
     try:
         consensus()
     except Exception as e:
@@ -407,6 +462,10 @@ def get_job_list(username = '', user = ''):
 
 
 def get_job_list_db(username = '', user = ''):
+    """
+    Function that returns either list of jobs based upon assigned user or the job creater from local database
+    or the entire list of jobs from local database.
+    """
     global cursor, conn
     jobs = list()
     try:
@@ -448,6 +507,9 @@ def get_job_list_db(username = '', user = ''):
 
 
 def insert_job_db(job):
+    """
+    Function that inserts job details from blockchain to local database. 
+    """
     global cursor, conn
     ret = False
     try:
@@ -469,6 +531,9 @@ def insert_job_db(job):
 
 
 def update_job_db(job):
+    """
+    Function that updates job details from blockchain to local database. 
+    """
     global cursor, conn
     ret = False
     try:
@@ -494,7 +559,11 @@ def update_job_db(job):
 
 
 def get_application_details_blockchain(job_id = '', username = '', app_id = ''):
-    # check for changes:
+    """
+    Function that returns either application detail based upon job_id, username, or application_id from blockchain and local database 
+    or returns count of applications from blockchain and local database.
+    """
+    # Consensus algorithm check to see if any peers chain has been modified.
     try:
         consensus()
     except Exception as e:
@@ -528,6 +597,10 @@ def get_application_details_blockchain(job_id = '', username = '', app_id = ''):
 
 
 def get_application_details_db(job_id = '', username = '', app_id = ''):
+    """
+    Function that returns either application detail based upon job_id, username, or application_id from local database 
+    or returns count of applications from local database.
+    """
     global cursor, conn
     application = dict()
     count = 0
@@ -568,7 +641,10 @@ def get_application_details_db(job_id = '', username = '', app_id = ''):
 
 
 def get_application_list(job_id = '', username = ''):
-    # check for changes:
+    """
+    Function that returns list of applications based upon job_id or username from blockchain and local database.
+    """
+    # Consensus algorithm check to see if any peers chain has been modified.
     try:
         consensus()
     except Exception as e:
@@ -598,6 +674,9 @@ def get_application_list(job_id = '', username = ''):
 
 
 def get_application_list_db(job_id = '', username = ''):
+    """
+    Function that returns list of applications based upon job_id or username from local database.
+    """
     global cursor, conn
     applications = list()
     try:
@@ -632,6 +711,9 @@ def get_application_list_db(job_id = '', username = ''):
 
 
 def insert_application_db(application):
+    """
+    Function that inserts job details from blockchain to local database. 
+    """
     global cursor, conn
     ret = False
     try:
@@ -652,6 +734,9 @@ def insert_application_db(application):
 
 
 def update_application_db(application):
+    """
+    Function that updates application details from blockchain to local database. 
+    """
     global cursor, conn
     ret = False
     try:
@@ -673,7 +758,11 @@ def update_application_db(application):
 
 
 def get_transaction_details(job_id = "", username=""):
-    # check for changes:
+    """
+    Function that returns either list of transaction based upon job_id or sender or receiver from the blockchain and local database
+    or the count of the transactions from the blockchian and local database.
+    """
+    # Consensus algorithm check to see if any peers chain has been modified.
     try:
         consensus()
     except Exception as e:
@@ -714,6 +803,10 @@ def get_transaction_details(job_id = "", username=""):
 
 
 def get_transaction_details_db(job_id = ''):
+    """
+    Function that returns either transactions based upon job_id from the local database
+    or the count of the transactions from the local database.
+    """
     global cursor, conn
     transaction = dict()
     count = 0
@@ -753,6 +846,9 @@ def get_transaction_details_db(job_id = ''):
 
 
 def get_transaction_list_db(sender = '', receiver = ''):
+    """
+    Function that returns list of transactions based sender or receiver from the blockchain and local database.
+    """
     global cursor, conn
     transactions = list()
     try:
@@ -788,6 +884,9 @@ def get_transaction_list_db(sender = '', receiver = ''):
 
 
 def insert_transaction_db(transaction):
+    """
+    Function that inserts transaction details from blockchain to local database. 
+    """
     global cursor, conn
     ret = False
     try:
@@ -808,7 +907,11 @@ def insert_transaction_db(transaction):
 
 
 def get_message_details(username = ""):
-    # check for changes:
+    """
+    Function that returns either list of message based sender or receiver from the blockchain and local database
+    or the count of the messages from the blockchain and local database.
+    """
+    # Consensus algorithm check to see if any peers chain has been modified.
     try:
         consensus()
     except Exception as e:
@@ -837,6 +940,10 @@ def get_message_details(username = ""):
 
 
 def get_message_details_db(id = ''):
+    """
+    Function that returns either the message based sender or receiver from the local database
+    or the count of the messages from the local database.
+    """
     global cursor, conn
     message = dict()
     count = 0
@@ -875,6 +982,9 @@ def get_message_details_db(id = ''):
 
 
 def get_message_list_db(sender = '', receiver = ''):
+    """
+    Function that returns either list of message based sender or receiver from the local database.
+    """
     global cursor, conn
     messages = list()
     try:
@@ -909,6 +1019,9 @@ def get_message_list_db(sender = '', receiver = ''):
 
 
 def insert_message_db(message):
+    """
+    Function that inserts message details from blockchain to local database. 
+    """
     global cursor, conn
     ret = False
     try:
@@ -929,6 +1042,9 @@ def insert_message_db(message):
 
 
 def get_chain_list_db(index = ''):
+    """
+    Function that returns the block based block index from the local database.
+    """
     global cursor, conn
     chain = list()
     try:
@@ -963,6 +1079,9 @@ def get_chain_list_db(index = ''):
 
 
 def get_latest_chain_list_db():
+    """
+    Function that returns the block based BLOCKCHAIN_LENGTH from the local database.
+    """
     global cursor, conn
     chain = list()
     try:
@@ -994,6 +1113,9 @@ def get_latest_chain_list_db():
 
 
 def insert_block_db(block):
+    """
+    Function that inserts each block details from blockchain to local database. 
+    """
     global cursor, conn
     ret = False
     try:
@@ -1013,20 +1135,11 @@ def insert_block_db(block):
     return ret
 
 
-
-def getuser(response):
-    user = {
-        'id': response[0],
-        'username': response[1],
-        'first_name': response[2],
-        'last_name': response[3],
-        'created': response[5]
-    }
-    return user
-
-
 @app.route("/")
 def home():
+    """
+    Home Function display all the jobs listed in the blockchain.
+    """
     jobs = get_job_list()
     return render_template('home.html', jobs = jobs)
 
@@ -1039,6 +1152,9 @@ def about():
 @app.route('/create', methods = ['GET', 'POST'])
 @flask_login.login_required
 def create_job():
+    """
+    Creation of the job and store the job details in the blockchain as the job json in the block.
+    """
     if request.method == 'POST':
         company_url = str(request.form['company_url'])
         if company_url[:4] == 'http':
@@ -1058,9 +1174,11 @@ def create_job():
         }
         transaction_data['job'] = job_form_data
         index = blockchain.create_new_transaction(transaction_data)
+        # Mining of the block into the blockchain
         if index:
             result = mine(uuid4().hex)
         if result.get('status', False):
+            # Check for the blockchain length exceed
             if get_blockchain_length() > app.config['BLOCKCHAIN_LENGTH']:
                 snapshot_block()
             next_url = get_job_details_blockchain()
@@ -1076,11 +1194,14 @@ def create_job():
 
 @app.route('/signup', methods = ['GET', 'POST'])
 def signup():
+    """
+    Creation of the user account and store the user details in the blockchain as the user json in the block.
+    """
     if request.method == 'POST':
         if request.form['password'] == request.form['password2']:
             login_user(str(request.form['username']), str(request.form['account_type']))
 
-            # Block chain initailization
+            # Block chain initialization
             transaction_data = {}
             user_form_data = {
                 'id': get_user_details_blockchain() + 1, 'username': str(request.form['username']),
@@ -1091,13 +1212,14 @@ def signup():
             }
             transaction_data['user'] = user_form_data
             index = blockchain.create_new_transaction(transaction_data)
+            # Mining of the block into the blockchain
             if index:
                 result = mine(uuid4().hex)
-
             if result.get('status', False):
+                # Check for the blockchain length exceed
                 if get_blockchain_length() > app.config['BLOCKCHAIN_LENGTH']:
                     snapshot_block()
-                # according to blockchian:
+                # According to blockchian:
                 user_id = get_user_details_blockchain()
                 flash(u'Successfully created new user.', 'success')
                 return redirect(url_for('home'))
@@ -1113,6 +1235,9 @@ def signup():
 
 @app.route('/login', methods = ['GET', 'POST'])
 def login():
+    """
+    Login function based upon username and password check in the blockchain.
+    """
     next = request.values.get('next', '')
     if request.method == 'POST':
         user_flag = False
@@ -1133,6 +1258,7 @@ def login():
             return render_template('login.html')
 
         if user_flag:
+            # Check for correct password
             if not pbkdf2_sha256.verify(request.form['password'], password):
                 flash(u'Password or Username is incorrect.', 'error')
                 return render_template('login.html')
@@ -1148,6 +1274,9 @@ def login():
 
 @app.route('/logout')
 def logout():
+    """
+    Logout Function removes the user logined from the session.
+    """
     flask_login.logout_user()
     if 'username' in session:
         session.pop('username')
@@ -1162,6 +1291,10 @@ def logout():
 @app.route('/profile', methods = ['GET', 'POST'])
 @flask_login.login_required
 def profile():
+    """
+    API Fucntion which display user profile of an user based upon their username.
+    Also the functionality of changing users details is allowed based upon users authentication.
+    """
     if request.method == 'POST':
         user_info = get_user_details_blockchain(username=str(flask_login.current_user.id)) 
         user_info['first_name'] = str(request.form['first_name'])
@@ -1199,6 +1332,9 @@ def profile():
 
 @app.route('/send_mail', methods = ['POST'])
 def send_mail():
+    """
+    API Fucntion which stores the message json in to a block when an user sends a message to another user.
+    """
     msg = {
         'id': get_message_details() + 1, 'sender': str(request.form['from_msg']),
         'receiver': str(request.form['to_msg']), 'date': str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
@@ -1218,6 +1354,10 @@ def send_mail():
 
 @app.route('/mail/<username>')
 def mail(username):
+    """
+    API Fucntion which display mails of an user based upon their username.
+    Also the functionality of sending a mail are displayed based upon users authentication.
+    """
     user = get_user_details_blockchain(username = str(username))  # dict
     mail_contacts = []
     if user['account_type'] == 'company':
@@ -1249,12 +1389,19 @@ def mail(username):
 
 @app.route('/user/<user_id>')
 def show_user(user_id):
+    """
+    API Function which display each user details based upon user_id.
+    """
     user = get_user_details_blockchain(user_id = str(user_id))
     return render_template('show_user.html', user = user)
 
 
 @app.route('/job/<job_id>')
 def show_job(job_id):
+    """
+    API Fucntion which display job based upon the job_id.
+    Also the functionalities like APPLY, MAKE PAYMENT and CREATE NEW JOB are displayed based upon users authentication.
+    """
     job = get_job_details_blockchain(str(job_id))
     applied = False
     payment = False
@@ -1282,9 +1429,14 @@ def show_job(job_id):
 @app.route('/apply/<job_id>', methods = ['GET', 'POST'])
 @flask_login.login_required
 def apply(job_id):
+    """
+    API Function that creates application Json in a block when freelancer user apply for a job.
+    """
     job = get_job_details_blockchain(str(job_id))
     if job:
+        # Check for the valid user
         if flask_login.current_user.is_authenticated:
+            # Check for user who hasnt applied for this job.
             allow_apply = not flask_login.current_user.id == job['createdby']
             allow_apply = allow_apply and not check_applications(job_id, flask_login.current_user.id)
         else:
@@ -1304,9 +1456,10 @@ def apply(job_id):
     }
     transaction_data['application'] = application_form_data
     index = blockchain.create_new_transaction(transaction_data)
+    # Mining of the block into the blockchain
     if index:
         result = mine(uuid4().hex)
-
+    # Check for the blockchain length exceed
     if result.get('status', False):
         if get_blockchain_length() > app.config['BLOCKCHAIN_LENGTH']:
             snapshot_block()
@@ -1314,35 +1467,13 @@ def apply(job_id):
     return flask.redirect(flask.url_for('home'))
 
 
-@app.route('/users')
-def show_all_users():
-    try:
-        db = getMysqlConnection()
-        conn = db['conn']
-        cursor = db['cursor']
-        query = "SELECT * FROM users;"
-        result = cursor.execute(query)
-        response = cursor.fetchall()
-    except Exception as e:
-        print(e)
-    finally:
-        cursor.close()
-        conn.close()
-
-    users = list()
-    for item in response:
-        user = dict()
-        user['id'] = item[0]
-        user['username'] = item[1]
-        user['email'] = item[2]
-        user['created'] = item[8]
-        users.append(user)
-    return render_template('show_all_users.html', users = users)
-
 
 @app.route('/jobs_applied')
 @flask_login.login_required
 def jobs_applied():
+    """
+    API Function display list of jobs applied by a particular freelancer user.
+    """
     application = get_application_list(username = str(flask_login.current_user.id))
     jobs = []
     for each_application in application:
@@ -1354,6 +1485,9 @@ def jobs_applied():
 @app.route('/company')
 @flask_login.login_required
 def list_jobs():
+    """
+    API Function display list of jobs created by a particular company.
+    """
     jobs = get_job_list(username = str(flask_login.current_user.id))
     return render_template('company.html', jobs = jobs)
 
@@ -1361,6 +1495,9 @@ def list_jobs():
 @app.route('/list_applications/<job_id>')
 @flask_login.login_required
 def list_applications(job_id):
+    """
+    API Function display list of applications applied for a particular job.
+    """
     application = get_application_list(job_id = str(job_id))
     jobs = []
     job_details = get_job_details_blockchain(job_id)
@@ -1387,6 +1524,10 @@ def list_applications(job_id):
 @app.route('/make_payment/<job_id>')
 @flask_login.login_required
 def make_payment(job_id):
+    """
+    API Function which generate transaction json in the block in blockchain, 
+    once the company user makes the payement to the a freelancer who has completed for the job.
+    """
     if session['account_type'] == 'company':
         job = get_job_details_blockchain(str(job_id))
         payment = {
@@ -1395,9 +1536,11 @@ def make_payment(job_id):
         }
         transaction_data = {'transaction': payment}
         index = blockchain.create_new_transaction(transaction_data)
+        # Mining of the block into the blockchain
         if index:
             result = mine(uuid4().hex)
         if result.get('status', False):
+            # Check for the blockchain length exceed
             if get_blockchain_length() > app.config['BLOCKCHAIN_LENGTH']:
                 snapshot_block()
         return redirect(url_for('show_job', job_id = int(job_id)))
@@ -1406,13 +1549,19 @@ def make_payment(job_id):
 @app.route('/mark_completed/<job_id>')
 @flask_login.login_required
 def mark_completed(job_id):
+    """
+    API Function which generate job json in block with status 'completed', 
+    once the freelance user marks the job as been completed.
+    """
     job = get_job_details_blockchain(str(job_id))
     job['status'] = 'completed'
     transaction_data = {'job': job}
     index = blockchain.create_new_transaction(transaction_data)
+    # Mining of the block into the blockchain
     if index:
         result = mine(uuid4().hex)
     if result.get('status', False):
+        # Check for the blockchain length exceed
         if get_blockchain_length() > app.config['BLOCKCHAIN_LENGTH']:
             snapshot_block()
         print("Information is Mined")
@@ -1422,17 +1571,22 @@ def mark_completed(job_id):
 @app.route('/mark_selected/<application_id>')
 @flask_login.login_required
 def mark_selected(application_id):
-    # Block chain initailization
+    """
+    API Function which generate job json in block with status 'assigned', 
+    once the company user selects a freelancer who has applied for the job.
+    """
     application = get_application_details_blockchain(app_id = application_id)
     job = get_job_details_blockchain(str(application['job_id']))
     job['status'] = 'assigned'
     job['username'] = application['username']
     transaction_data = {'job': job}
     index = blockchain.create_new_transaction(transaction_data)
+    # Mining of the block into the blockchain
     if index:
         result = mine(uuid4().hex)
 
     if result.get('status', False):
+        # Check for the blockchain length exceed
         if get_blockchain_length() > app.config['BLOCKCHAIN_LENGTH']:
             snapshot_block()
         print("Information is Mined")
@@ -1441,10 +1595,16 @@ def mark_selected(application_id):
 
 @app.errorhandler(404)
 def page_not_found(e):
+    """
+    Function that notifies if any non defined api request is been called.
+    """
     return render_template('404.html'), 404
 
 
 def check_db():
+    """
+    Function which ensures that each table which is being used in the program is created in the local database. 
+    """
     global cursor, conn
     try:
         db = getMysqlConnection()
@@ -1592,7 +1752,7 @@ def check_db():
                 "id varchar(50) NOT NULL, " \
                 "proof varchar(50) NOT NULL, " \
                 "prev_hash varchar(100) NOT NULL, " \
-                "body varchar(500) NOT NULL, " \
+                "body varchar(1500) NOT NULL, " \
                 "creation DATETIME NOT NULL, " \
                 "nonce int NOT NULL, " \
                 "hash varchar(100) NOT NULL, " \
@@ -1604,8 +1764,10 @@ def check_db():
         conn.close()
 
 
-# Blocakchain API's
 def mine(user_address):
+    """
+    Function that mines the block into block-chain.
+    """
     block = blockchain.mine_block(user_address, node_address)
     response = {'status': True, 'message': 'Successfully Mined the new Block', 'block_data': block}
     return response
@@ -1613,7 +1775,9 @@ def mine(user_address):
 
 @app.route('/blockchain', methods = ['GET'])
 def get_full_blockchain():
-        # check for changes:
+    """
+    Function that displays whole block-chain on the html page.
+    """
     try:
         consensus()
     except Exception as e:
@@ -1622,22 +1786,25 @@ def get_full_blockchain():
     return render_template('chain.html', chain = response['chain'])
 
 
-# For Sync with the other nodes
 @app.route('/chain', methods = ['GET'])
 def get_full_chain():
+    """
+    Api for getting whole block-chain in a peer network.
+    """
     blocks = blockchain.get_serialized_chain
     index = 0
     if 'index' in  blocks[-1]:
         index = blocks[-1]['index']
     length = len(blockchain.chain) + len(get_chain_list_db())
     response = {'chain': blockchain.get_serialized_chain,'length':length,'index':index}
-    print(response)
     return jsonify(response)
 
 
-# Set each servers neighbours:
-# @app.route('/register-node/<port>', methods = ['GET'])
+
 def register_node():
+    """
+    Each peer is register its neighbour through an csv file which contains the node address and port number at which neighbour server is running.
+    """
     try:
         node_data = pd.read_csv('server.csv')
         blockchain.create_node(node_data['address'])
@@ -1650,8 +1817,14 @@ def register_node():
         print(e)
 
 
-# @app.route('/sync-chain', methods = ['GET'])
 def consensus():
+    """
+    Consensus Algorithm: When we have more than one node in our blockchain network.
+    To make sure every node in our network has the same blockchain, we make use of this algorithm.
+    Logic: Each peer node make api call request to neighbour node for length of their block-chain and eniter block-chain.
+            If the peer node block-chain is smaller then one of the neighbour it synchornizes with that neighbour 
+            and notifies other peers in ite neighbours.
+    """
     def get_neighbour_chains():
         neighbour_chains = []
         neighbour_chain_length =[]
@@ -1676,30 +1849,29 @@ def consensus():
     if longest_chain[-1]['index'] != index_check:
         longest_chain = neighbour_chains[neighbour_index.index(index_check)]
            
-    print(longest_chain,index_check, check)
-    # longest_chain = max(neighbour_chains, key = len)
+    # Length of the chain based on the length of the current chain and data in the chain database
     length = len(blockchain.chain) + len(get_chain_list_db())
-    print(length)
-    print(index_check)
-    if length >= index_check:  # If our chain is longest, then do nothing
+    # If our chain is longest, then do nothing
+    # else our chain isn't longest, then we store the longest chain
+    if length >= index_check:  
         response = {'message': 'Chain is already up to date', 'status': 1}
-    else:  # If our chain isn't longest, then we store the longest chain
+    else:
         if index_check > 3:
             snapshot_block()
         blockchain.chain = [blockchain.get_block_object_from_block_data(block) for block in longest_chain]
         response = {'message': 'Chain was replaced', 'status': 2}
 
-    print(response)
     return response
 
 
 def exit_handler():
-    print('My application is ending!')
+    """
+    Snapshot each block into the database and truncate the whole block-chain before program exiting.
+    """
     chain_length= get_blockchain_length()
     for _ in range(chain_length):
         snapshot_block()      
-    print('snapshot completed')
-
+    
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument('-H', '--host', default = '0.0.0.0')
@@ -1708,4 +1880,4 @@ if __name__ == "__main__":
     check_db()
     register_node()
     app.run(host = args.host, port = args.port, debug = True, threaded = True)
-    # atexit.register(exit_handler)
+    atexit.register(exit_handler)

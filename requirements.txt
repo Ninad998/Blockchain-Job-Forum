@@ -3,3 +3,4 @@ Flask
 passlib
 flask-login
 flask-mysql
+uuid
